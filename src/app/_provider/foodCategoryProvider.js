@@ -1,64 +1,175 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
-import React from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 
-const FoodCategoryContext = createContext(null); //Creates providier
+const FoodCategoryContext = createContext(null);
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:999";
 
 export const useFoodCategoryContext = () => {
   const context = useContext(FoodCategoryContext);
   if (!context) {
-    throw new Error(
-      "useFoodCategory must be used inside a <FoodCategoryProvider>"
-    );
+    throw new Error("useFoodCategoryContext must be used inside a <FoodCategoryProvider>");
   }
   return context;
+};
+
+const getAuthToken = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return localStorage.getItem("authToken") || localStorage.getItem("token") || "";
+};
+
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const ensureAuthToken = () => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Please log in first. Missing authorization token.");
+  }
+  return token;
 };
 
 export const FoodCategoryProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const fetchCategory = async () => {
+  const fetchMenu = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "http://localhost:999/authentication/foodCategory",
-        {
-          headers: { "Content-type": "application/json" },
-        }
-      );
-      console.log(`This shit is working`);
-      setCategories(response.data);
+      setError("");
+      const response = await axios.get(`${API_BASE}/authentication/menu`);
+      setCategories(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
-      console.log(`You know the deal, you've failed`, err);
-      console.error(`Failed to fetch categories`, err);
+      setError(err?.response?.data?.message || "Failed to fetch menu");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMenu();
+  }, []);
 
   const createCategory = async (categoryName) => {
+    if (!categoryName?.trim()) {
+      throw new Error("Category name is required");
+    }
+
+    ensureAuthToken();
+
+    await axios.post(
+      `${API_BASE}/authentication/foodCategory`,
+      { categoryName: categoryName.trim() },
+      { headers: { "Content-Type": "application/json", ...getAuthHeaders() } }
+    );
+
+    await fetchMenu();
+  };
+
+  const uploadDishImage = async (file) => {
+    if (!file) {
+      return "";
+    }
+
+    ensureAuthToken();
+
+    const imageData = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
     try {
-      setLoading(true);
       const response = await axios.post(
-        "http://localhost:999/authentication/foodCategory",
-        {
-          headers: { "Content-type": "application/json" },
-        }
+        `${API_BASE}/authentication/upload-image`,
+        { imageData },
+        { headers: { "Content-Type": "application/json", ...getAuthHeaders() } }
       );
-      fetchCategory();
-      console.log(`this shit is also working`);
+
+      return response?.data?.imageUrl || "";
     } catch (err) {
-      console.error(error, "Failed to create category");
-    } finally {
-      setLoading(false);
+      const apiMessage = err?.response?.data?.message || "Failed to upload image";
+      const apiError = err?.response?.data?.error;
+      throw new Error(apiError ? `${apiMessage}: ${apiError}` : apiMessage);
     }
   };
 
-  return (
-    <FoodCategoryContext.Provider value={{ categories, loading }}>
-      {children}
-    </FoodCategoryContext.Provider>
+  const createFood = async ({ foodName, price, ingredients, category, image }) => {
+    ensureAuthToken();
+
+    try {
+      await axios.post(
+        `${API_BASE}/authentication/food`,
+        { foodName, price, ingredients, category, image },
+        { headers: { "Content-Type": "application/json", ...getAuthHeaders() } }
+      );
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message || "Failed to create food";
+      const apiError = err?.response?.data?.error;
+      throw new Error(apiError ? `${apiMessage}: ${apiError}` : apiMessage);
+    }
+
+    await fetchMenu();
+  };
+
+  const updateFood = async ({ id, foodName, price, ingredients, category, image }) => {
+    ensureAuthToken();
+
+    try {
+      await axios.patch(
+        `${API_BASE}/authentication/food`,
+        { id, foodName, price, ingredients, category, image },
+        { headers: { "Content-Type": "application/json", ...getAuthHeaders() } }
+      );
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message || "Failed to update food";
+      const apiError = err?.response?.data?.error;
+      throw new Error(apiError ? `${apiMessage}: ${apiError}` : apiMessage);
+    }
+
+    await fetchMenu();
+  };
+
+  const deleteFood = async ({ id, foodName }) => {
+    ensureAuthToken();
+
+    try {
+      await axios.delete(`${API_BASE}/authentication/food`, {
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        data: { id, foodName },
+      });
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message || "Failed to delete food";
+      const apiError = err?.response?.data?.error;
+      throw new Error(apiError ? `${apiMessage}: ${apiError}` : apiMessage);
+    }
+
+    await fetchMenu();
+  };
+
+  const value = useMemo(
+    () => ({
+      categories,
+      loading,
+      error,
+      fetchMenu,
+      createCategory,
+      uploadDishImage,
+      createFood,
+      updateFood,
+      deleteFood,
+      hasAuthToken: Boolean(getAuthToken()),
+    }),
+    [categories, loading, error]
   );
+
+  return <FoodCategoryContext.Provider value={value}>{children}</FoodCategoryContext.Provider>;
 };

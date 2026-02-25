@@ -1,35 +1,36 @@
+import Link from "next/link";
 import NomNomLogoRed from "../../_components/icons/NomNomLogoRed";
 
 const Header = () => {
   return (
-    <div className="w-[1440px] h-[148px] bg-[#18181B] flex items-center justify-between px-22 py-3">
-      <div aria-label="Logo and slogan section" className="flex gap-3">
-        <NomNomLogoRed />
-        <div
-          aria-label="slogan"
-          className="flex flex-col text-[20px] text-white"
-        >
-          {" "}
-          <div className="font-semibold">
-            Nom<span className="text-red-500 font-semibold">Nom</span>{" "}
+    <header className="w-full bg-[#18181b]">
+      <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-4 py-5 sm:px-8 lg:px-[88px]">
+        <div aria-label="Logo and slogan section" className="flex items-center gap-3">
+          <NomNomLogoRed />
+          <div aria-label="slogan" className="flex flex-col text-white">
+            <p className="text-xl font-semibold leading-none">
+              Nom<span className="text-[#ef4444]">Nom</span>
+            </p>
+            <p className="mt-1 text-xs text-white/70">Swift delivery</p>
           </div>
-          <div className="font-400 text-[12px]">Swift delivery</div>
         </div>
-      </div>
-      <div aria-label="Right section">
-        <div
-          aria-label="User register and login section"
-          className="flex gap-3"
-        >
-          <div className="text-[#00000f] h-9 flex items-center py-2 px-3 rounded-full  bg-[#F4f4f5]">
+
+        <div aria-label="User register and login section" className="flex gap-2 sm:gap-3">
+          <Link
+            href="/signup"
+            className="inline-flex h-9 items-center rounded-full bg-[#f4f4f5] px-4 text-sm font-medium text-[#18181b] transition hover:bg-white"
+          >
             Sign up
-          </div>
-          <div className="text-[#ffffff] h-9 flex items-center py-2 px-3 bg-red-500 rounded-full ">
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex h-9 items-center rounded-full bg-[#ef4444] px-4 text-sm font-medium text-white transition hover:bg-[#dc2626]"
+          >
             Log in
-          </div>
+          </Link>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 

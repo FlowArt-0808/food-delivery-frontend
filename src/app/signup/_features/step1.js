@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import UserFormImage from "../../_components/images/UserFormImage.png";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -7,29 +9,15 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
-  FieldSeparator,
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-import Backbutton from "../components/Backbutton";
-
-const Step1 = ({ formik, step, setStep }) => {
-  const handleNext = (e) => {
-    e.preventDefault();
-    formik.setFieldTouched("email", true);
-    formik.validateField("email").then((error) => {
-      if (!error && formik.values.email) {
-        increaseStep();
-      }
-    });
-  };
-
+const Step1 = ({ formik, setStep }) => {
   const { values, errors, touched, handleChange, handleBlur } = formik;
 
   return (
-    <div className="flex gap-12 items-center justify-center">
+    <div className="flex items-center justify-center gap-12">
       <div className="w-104 pl-25">
         <FieldSet>
           <FieldGroup className="gap-6">
@@ -74,10 +62,12 @@ const Step1 = ({ formik, step, setStep }) => {
         </FieldSet>
       </div>
 
-      <div
-        aria-label="Image for user form"
-        className="bg-[url(./_components/images/UserFormImage.png)]  bg-center bg-no-repeat w-[856px] h-[904px] rounded-md pr-5"
-      ></div>
+      <Image
+        src={UserFormImage}
+        alt="Signup form visual"
+        className="h-[904px] w-[856px] rounded-md object-cover pr-5"
+        priority
+      />
     </div>
   );
 };

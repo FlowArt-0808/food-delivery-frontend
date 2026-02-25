@@ -1,14 +1,16 @@
 "use client";
-import { useState } from "react";
-import * as React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 
+import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Pagination,
   PaginationContent,
@@ -18,245 +20,352 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
 import { useAdminContext } from "@/app/_provider/adminProvider";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:999";
+
+const getAuthToken = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return localStorage.getItem("authToken") || localStorage.getItem("token") || "";
+};
+
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const normalizeStatus = (status) => String(status || "pending").toLowerCase();
+const toTitleCase = (status) => {
+  const value = normalizeStatus(status);
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
 export const Order = () => {
-  const [totalItems, setTotalItems] = useState(0);
-  const [position, setPosition] = React.useState("bottom");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("Pending");
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [singleOrderId, setSingleOrderId] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const {
-    handleDeliveryButton,
-    isDeliveryButtonClicked,
-    setIsDeliveryButtonClicked,
-  } = useAdminContext();
+  const { handleDeliveryButton, isDeliveryButtonClicked, setIsDeliveryButtonClicked } =
+    useAdminContext();
+  const PAGE_SIZE = 10;
 
-  const header = {
-    key: "header-row",
-    checkboxRow: <Checkbox className="border-[#09090B] cursor-pointer" />,
-    customerNumberInLineRow: `№`,
-    customersRow: `Customer`,
-    foodRow: `Food`,
-    dateRow: `Date`,
-    totalCostRow: `$19.00`,
-    addressRow: `Delivery Address`,
-    statusRow: <Button>Delivery State</Button>,
+  const fetchOrders = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      setError("Please log in as admin first.");
+      setOrders([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const response = await axios.get(`${API_BASE}/authentication/order`, {
+        headers: getAuthHeaders(),
+      });
+      const list = Array.isArray(response.data) ? response.data : [];
+      setOrders(list);
+      setCurrentPage(1);
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Failed to fetch orders");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const dummyData = [
-    {
-      key: "row-1",
-      checkbox: <Checkbox className="border-[#09090B] cursor-pointer" />,
-      customerNumberInLine: `1`,
-      customerEmail: `Naraa`,
-      food: (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="bg-transparent shadow-none flex items-center gap-4 cursor-pointer"
-            >
-              Open
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="9"
-                height="5"
-                viewBox="0 0 5"
-                fill="none"
-              >
-                <path
-                  d="M0.5 0.5L4.5 4.5L8.5 0.5"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>Panel Position</DropdownMenuLabel>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-      date: `2024/12/20`,
-      totalCost: `$19.00`,
-      address: `2024/12/СБД, 12-р хороо, СБД нэгдсэн эмнэлэг Sbd negdsen`,
-      status: (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <p>Pending</p>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-              >
-                <path
-                  d="M4.66797 10.0001L8.0013 13.3334L11.3346 10.0001M4.66797 6.00008L8.0013 2.66675L11.3346 6.00008"
-                  stroke="#09090B"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>Panel Position</DropdownMenuLabel>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-    {
-      key: "row-2",
-      checkbox: <Checkbox className="border-[#09090B] cursor-pointer" />,
-      customerNumberInLine: `2`,
-      customerEmail: `John`,
-      food: <span>Pizza</span>,
-      date: `2024/12/21`,
-      totalCost: `$25.00`,
-      address: `123 Main St`,
-      status: <span>Delivered</span>,
-    },
-  ];
+  const totalItems = orders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pageStart = (safePage - 1) * PAGE_SIZE;
+  const pageOrders = orders.slice(pageStart, pageStart + PAGE_SIZE);
+
+  const allSelected = useMemo(
+    () => pageOrders.length > 0 && pageOrders.every((item) => selectedOrderIds.includes(item._id)),
+    [pageOrders, selectedOrderIds]
+  );
+
+  const toggleAll = (checked) => {
+    const pageIds = pageOrders.map((item) => item._id);
+    setSelectedOrderIds((prev) => {
+      if (checked) {
+        return [...new Set([...prev, ...pageIds])];
+      }
+
+      return prev.filter((id) => !pageIds.includes(id));
+    });
+  };
+
+  const toggleOne = (id, checked) => {
+    setSelectedOrderIds((prev) =>
+      checked ? [...new Set([...prev, id])] : prev.filter((item) => item !== id)
+    );
+  };
+
+  const handleSaveDeliveryState = async () => {
+    const targetIds = singleOrderId ? [singleOrderId] : selectedOrderIds;
+
+    if (!targetIds.length) {
+      setError("Select at least one order.");
+      return;
+    }
+
+    try {
+      setIsSavingStatus(true);
+      setError("");
+      await axios.patch(
+        `${API_BASE}/authentication/order/status`,
+        {
+          orderIds: targetIds,
+          status: normalizeStatus(selectedStatus),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+        }
+      );
+
+      setIsDeliveryButtonClicked(false);
+      setSingleOrderId("");
+      setSelectedOrderIds([]);
+      await fetchOrders();
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Failed to update order status");
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
+  const openSingleStatusDialog = (orderId, status) => {
+    setSingleOrderId(orderId);
+    setSelectedStatus(toTitleCase(status));
+    setIsDeliveryButtonClicked(true);
+  };
+
+  const openBulkStatusDialog = () => {
+    setSingleOrderId("");
+    setSelectedStatus("Pending");
+    handleDeliveryButton();
+  };
+
+  const buildPageList = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    if (safePage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+
+    if (safePage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [1, "...", safePage - 1, safePage, safePage + 1, "...", totalPages];
+  };
+
+  const pageItems = buildPageList();
 
   return (
-    <div className="m-6 flex flex-col ">
-      <div
-        aria-label="The Order container"
-        className="flex flex-col bg-[#FFF] w-[1171px] border border-[#e5e4e6] rounded-md"
-      >
-        <div aria-label="Header" className="flex justify-between p-4">
-          <div aria-label="Header info" className="flex flex-col ">
-            <p className="text-xl text-[#09090B] font-semibold">Orders</p>
-            <p className="text-xs text-[#71717B]">{totalItems}</p>
+    <div className="m-6 flex flex-col gap-4">
+      {error && (
+        <div className="rounded-md border border-[#fca5a5] bg-[#fff1f2] px-4 py-2 text-sm text-[#9f1239]">
+          {error}
+        </div>
+      )}
+
+      <div className="rounded-md border border-[#e5e4e6] bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="flex flex-col">
+            <p className="text-xl font-semibold text-[#09090B]">Orders</p>
+            <p className="text-xs text-[#71717B]">{totalItems} items</p>
           </div>
-          <div aria-label="Header action" className="flex gap-3">
-            <div
-              aria-label="Date picker"
-              className="py-2 px-4 flex items-center gap-2 rounded-full border-2 border-[#E4E4E7]"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-              >
-                <path
-                  d="M10.1338 0.5C10.1519 0.500244 10.1669 0.515033 10.167 0.533203V1.56641H12.2666C12.8741 1.56641 13.3662 2.05948 13.3662 2.66699V12.2666C13.3662 12.8741 12.8741 13.3662 12.2666 13.3662H1.59961C0.992279 13.366 0.5 12.874 0.5 12.2666V2.66699C0.5 2.05961 0.992273 1.56662 1.59961 1.56641H3.7002V0.533203C3.70027 0.514856 3.71504 0.5 3.7334 0.5C3.75173 0.500035 3.76653 0.514878 3.7666 0.533203V1.56641H10.0996V0.533203C10.0997 0.514881 10.1154 0.5 10.1338 0.5ZM0.566406 12.2666C0.566406 12.8371 1.02907 13.2996 1.59961 13.2998H12.2666C12.8373 13.2998 13.2998 12.8373 13.2998 12.2666V4.83301H0.566406V12.2666ZM2.66699 11.167C2.68522 11.1672 2.7002 11.1819 2.7002 11.2002C2.70009 11.2184 2.68516 11.2332 2.66699 11.2334C2.64868 11.2334 2.6339 11.2185 2.63379 11.2002C2.63379 11.1818 2.64861 11.167 2.66699 11.167ZM4.7998 11.167C4.81819 11.167 4.83301 11.1818 4.83301 11.2002C4.8329 11.2185 4.81812 11.2334 4.7998 11.2334C4.78158 11.2333 4.76671 11.2184 4.7666 11.2002C4.7666 11.1819 4.78151 11.1671 4.7998 11.167ZM6.93359 11.167C6.95185 11.1671 6.9668 11.1819 6.9668 11.2002C6.96669 11.2184 6.95179 11.2333 6.93359 11.2334C6.91528 11.2334 6.9005 11.2185 6.90039 11.2002C6.90039 11.1818 6.91521 11.167 6.93359 11.167ZM9.06641 11.167C9.08479 11.167 9.09961 11.1818 9.09961 11.2002C9.0995 11.2185 9.08472 11.2334 9.06641 11.2334C9.04821 11.2333 9.03331 11.2184 9.0332 11.2002C9.0332 11.1819 9.04815 11.1671 9.06641 11.167ZM2.66699 9.0332C2.68516 9.03338 2.70006 9.04823 2.7002 9.06641C2.7002 9.0847 2.68525 9.09943 2.66699 9.09961C2.64858 9.09961 2.63379 9.08481 2.63379 9.06641C2.63393 9.04812 2.64867 9.0332 2.66699 9.0332ZM4.7998 9.0332C4.81812 9.0332 4.83287 9.04812 4.83301 9.06641C4.83301 9.08481 4.81821 9.09961 4.7998 9.09961C4.78149 9.0995 4.7666 9.08475 4.7666 9.06641C4.76674 9.04818 4.78157 9.03331 4.7998 9.0332ZM6.93359 9.0332C6.95179 9.03334 6.96666 9.0482 6.9668 9.06641C6.9668 9.08472 6.95188 9.09947 6.93359 9.09961C6.91519 9.09961 6.90039 9.08481 6.90039 9.06641C6.90053 9.04812 6.91528 9.0332 6.93359 9.0332ZM9.06641 9.0332C9.08472 9.0332 9.09947 9.04812 9.09961 9.06641C9.09961 9.08481 9.08481 9.09961 9.06641 9.09961C9.04812 9.09947 9.0332 9.08472 9.0332 9.06641C9.03334 9.04821 9.04821 9.03334 9.06641 9.0332ZM11.2002 9.0332C11.2184 9.03331 11.2333 9.04821 11.2334 9.06641C11.2334 9.08472 11.2185 9.0995 11.2002 9.09961C11.1818 9.09961 11.167 9.08479 11.167 9.06641C11.1671 9.04815 11.1819 9.0332 11.2002 9.0332ZM6.93359 6.90039C6.95188 6.90053 6.9668 6.91527 6.9668 6.93359C6.96666 6.9518 6.9518 6.96666 6.93359 6.9668C6.91527 6.9668 6.90053 6.95188 6.90039 6.93359C6.90039 6.91519 6.91519 6.90039 6.93359 6.90039ZM9.06641 6.90039C9.08481 6.90039 9.09961 6.91519 9.09961 6.93359C9.09947 6.95188 9.08472 6.9668 9.06641 6.9668C9.0482 6.96666 9.03334 6.95179 9.0332 6.93359C9.0332 6.91528 9.04812 6.90053 9.06641 6.90039ZM11.2002 6.90039C11.2185 6.9005 11.2334 6.91528 11.2334 6.93359C11.2333 6.95179 11.2184 6.96669 11.2002 6.9668C11.1819 6.9668 11.1671 6.95185 11.167 6.93359C11.167 6.91521 11.1818 6.90039 11.2002 6.90039ZM1.59961 1.63379C1.0291 1.634 0.566406 2.09643 0.566406 2.66699V4.7666H13.2998V2.66699C13.2998 2.09627 12.8372 1.63379 12.2666 1.63379H10.167V2.66699C10.1668 2.68508 10.1519 2.69995 10.1338 2.7002C10.1155 2.7002 10.0998 2.68523 10.0996 2.66699V1.63379H3.7666V2.66699C3.76643 2.68523 3.75167 2.70016 3.7334 2.7002C3.7151 2.7002 3.70037 2.68525 3.7002 2.66699V1.63379H1.59961Z"
-                  fill="#18181B"
-                  stroke="#18181B"
-                />
-              </svg>
-              <p className="text-sm text-[#09090B] font-normal">
-                13 June 2023 - 14 July 2023
-              </p>
-            </div>
-            <button
-              aria-label="Delivery state changer"
-              className="py-2 px-4 flex items-center bg-[#d1d1d1] rounded-full cursor-pointer"
-              onClick={handleDeliveryButton}
-            >
-              <p className="text-sm font-medium text-[#fafafa]">
-                Change delivery state
-              </p>
-            </button>
-          </div>
+
+          <Button
+            aria-label="Delivery state changer"
+            className="rounded-full bg-[#18181B]"
+            onClick={openBulkStatusDialog}
+          >
+            Change delivery state
+          </Button>
         </div>
 
-        <div className="grid grid-cols-8 w-fit w-fit h-fit bg-[#E4E4E7] items-center">
-          <div className="p-4 flex items-center">{header.checkboxRow}</div>
-          <div className="p-4 w-14 flex items-center">
-            {header.customerNumberInLineRow}
-          </div>
-          <div className="p-4 flex items-center">{header.customersRow}</div>
-          <div className="p-4 flex">{header.foodRow}</div>
-          <div className="p-4 flex items-center">{header.dateRow}</div>
-          <div className="p-4 flex items-center">{header.totalCostRow}</div>
-          <div className="px-4 py-3 flex items-center overflow-hidden">
-            {header.addressRow}
-          </div>
-          <div className="px-4 py-3">{header.statusRow}</div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-sm">
+            <thead className="bg-[#E4E4E7] text-left text-[#09090B]">
+              <tr>
+                <th className="p-4">
+                  <Checkbox
+                    className="cursor-pointer border-[#09090B]"
+                    checked={allSelected}
+                    onCheckedChange={(checked) => toggleAll(Boolean(checked))}
+                  />
+                </th>
+                <th className="p-4">No.</th>
+                <th className="p-4">Customer</th>
+                <th className="p-4">Food</th>
+                <th className="p-4">Date</th>
+                <th className="p-4">Total</th>
+                <th className="p-4">Delivery Address</th>
+                <th className="p-4">Status</th>
+              </tr>
+            </thead>
 
-          {dummyData.map((item) => (
-            <React.Fragment key={item.key}>
-              <div className="p-4 flex items-center">{item.checkbox}</div>
-              <div className="p-4 w-14 flex items-center">
-                {item.customerNumberInLine}
-              </div>
-              <div className="p-4 flex items-center">{item.customerEmail}</div>
-              <div className="p-4 flex">{item.food}</div>
-              <div className="p-4 flex items-center">{item.date}</div>
-              <div className="p-4 flex items-center">{item.totalCost}</div>
-              <div className="px-4 py-3 flex items-center overflow-hidden">
-                {item.address}
-              </div>
-              <div className="px-4 py-3">{item.status}</div>
-            </React.Fragment>
-          ))}
+            <tbody>
+              {!loading && orders.length === 0 && (
+                <tr className="border-t border-[#E4E4E7]">
+                  <td className="p-4 text-sm text-[#71717A]" colSpan={8}>
+                    No orders yet.
+                  </td>
+                </tr>
+              )}
+
+              {loading && (
+                <tr className="border-t border-[#E4E4E7]">
+                  <td className="p-4 text-sm text-[#71717A]" colSpan={8}>
+                    Loading orders...
+                  </td>
+                </tr>
+              )}
+
+              {pageOrders.map((item) => (
+                <tr key={item._id} className="border-t border-[#E4E4E7]">
+                  <td className="p-4 align-top">
+                    <Checkbox
+                      className="cursor-pointer border-[#09090B]"
+                      checked={selectedOrderIds.includes(item._id)}
+                      onCheckedChange={(checked) => toggleOne(item._id, Boolean(checked))}
+                    />
+                  </td>
+                  <td className="p-4 align-top">{item.orderNumber || "-"}</td>
+                  <td className="p-4 align-top">{item.user?.firstName || item.user?.email || "-"}</td>
+                  <td className="p-4 align-top">
+                    {(item.foodOrderItems || [])
+                      .map((orderItem) => `${orderItem?.food?.foodName || "Unknown"} x${orderItem?.quantity || 0}`)
+                      .join(", ") || "-"}
+                  </td>
+                  <td className="p-4 align-top">
+                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "-"}
+                  </td>
+                  <td className="p-4 align-top">${Number(item.totalPrice || 0).toFixed(2)}</td>
+                  <td className="p-4 align-top">{item.deliveryAddress || "-"}</td>
+                  <td className="p-4 align-top">
+                    <button
+                      type="button"
+                      className={`rounded-full border px-3 py-1 text-xs ${
+                        normalizeStatus(item.status) === "delivered"
+                          ? "border-green-500 bg-green-50 text-green-600"
+                          : normalizeStatus(item.status) === "cancelled"
+                            ? "border-gray-400 bg-gray-100 text-gray-600"
+                            : "border-red-500 bg-[#E11D48]/10 text-red-500"
+                      }`}
+                      onClick={() => openSingleStatusDialog(item._id, item.status)}
+                    >
+                      {toTitleCase(item.status)}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
       <Dialog
-        aria-label="The Dialog that appears when Delivery Button is clicked "
         open={isDeliveryButtonClicked}
-        onOpenChange={setIsDeliveryButtonClicked}
+        onOpenChange={(open) => {
+          setIsDeliveryButtonClicked(open);
+          if (!open) {
+            setSingleOrderId("");
+          }
+        }}
       >
-        <DialogContent className=" flex flex-col w-91">
+        <DialogContent className="w-91">
           <DialogHeader>
-            <DialogTitle className="text-lg text-[#09090B ] font-semibold">
+            <DialogTitle className="text-lg font-semibold text-[#09090B]">
               Change delivery state
             </DialogTitle>
           </DialogHeader>
 
-          <div aria-label="Buttons" className="flex gap-4 ">
-            <button className="border py-2 px-2.5 bg-[#F4F4F5] rounded-full hover:bg-[#E11D48]/10  hover:border-red-500 hover:text-red-500 cursor-pointer ">
-              Delivered
-            </button>
-            <button className="border py-2 px-2.5 bg-[#F4F4F5] rounded-full hover:bg-[#E11D48]/10  hover:border-red-500 hover:text-red-500 cursor-pointer">
-              Pending
-            </button>
-            <button className="border py-2 px-2.5 bg-[#F4F4F5] rounded-full hover:bg-[#E11D48]/10  hover:border-red-500  hover:text-red-500 cursor-pointer">
-              Cancelled
-            </button>
+          <div className="flex gap-3">
+            {[
+              "Delivered",
+              "Pending",
+              "Cancelled",
+            ].map((status) => (
+              <button
+                key={status}
+                className={`rounded-full border px-3 py-2 text-sm cursor-pointer ${
+                  selectedStatus === status
+                    ? "border-red-500 bg-[#E11D48]/10 text-red-500"
+                    : "bg-[#F4F4F5]"
+                }`}
+                onClick={() => setSelectedStatus(status)}
+              >
+                {status}
+              </button>
+            ))}
           </div>
 
           <DialogFooter>
-            <Button
-              type="submit"
-              className="w-full cursor-pointer rounded-full"
-              onClick={handleDeliveryButton}
-            >
-              Save changes
+            <Button type="button" className="w-full rounded-full" onClick={handleSaveDeliveryState} disabled={isSavingStatus}>
+              {isSavingStatus ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Pagination className="ml-115">
+      <Pagination className="justify-end">
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href="#" />
+            <PaginationPrevious
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentPage((prev) => Math.max(1, prev - 1));
+              }}
+            />
           </PaginationItem>
+          {pageItems.map((pageItem, index) => (
+            <PaginationItem key={`${pageItem}-${index}`}>
+              {pageItem === "..." ? (
+                <PaginationEllipsis />
+              ) : (
+                <PaginationLink
+                  href="#"
+                  isActive={safePage === pageItem}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentPage(Number(pageItem));
+                  }}
+                >
+                  {pageItem}
+                </PaginationLink>
+              )}
+            </PaginationItem>
+          ))}
           <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
+            <PaginationNext
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+              }}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

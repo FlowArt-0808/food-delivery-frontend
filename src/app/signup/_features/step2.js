@@ -1,16 +1,14 @@
 "use client";
 
+import Image from "next/image";
+import UserFormImage from "../../_components/images/UserFormImage.png";
 import Backbutton from "../components/Backbutton";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
-  FieldSeparator,
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -88,10 +86,12 @@ const Step2 = ({ formik, loading, step, setStep }) => {
         </FieldSet>
       </div>
 
-      <div
-        aria-label="Image for user form"
-        className="bg-[url(./_components/images/UserFormImage.png)]  bg-center bg-no-repeat w-[856px] h-[904px] rounded-md pr-5"
-      ></div>
+      <Image
+        src={UserFormImage}
+        alt="Signup form visual"
+        className="h-[904px] w-[856px] rounded-md object-cover pr-5"
+        priority
+      />
     </div>
   );
 };

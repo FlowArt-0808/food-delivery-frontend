@@ -1,210 +1,422 @@
-import { Card } from "@/app/_components/card";
-import { useState } from "react";
+"use client";
 
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useAdminContext } from "@/app/_provider/adminProvider";
 
-export const Dishmenu = ({ title }) => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isAddedToCart, setIsAddedToCart] = useState(true);
-  const {
-    foodCounter,
-    addDishClicked,
-    setAddDishClicked,
-    addDish,
-    setActivePopMenu,
-  } = useAdminContext();
+const EmptyCard = ({ categoryName, onClick, disabled }) => (
+  <button
+    aria-label="Add new dish to a category"
+    className="flex h-[220px] cursor-pointer flex-col items-center justify-center gap-2.5 rounded-[14px] border border-dashed border-[#FCA5A5] bg-[#FFF] px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+    onClick={onClick}
+    disabled={disabled}
+  >
+    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none">
+        <path d="M5.16667 0.5V9.83333M0.5 5.16667H9.83333" stroke="#FAFAFA" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+    <p className="max-w-[120px] text-center text-[11px] font-medium text-[#3F3F46]">Add new Dish to {categoryName}</p>
+  </button>
+);
 
-  const [cards, setCards] = useState([
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-    {
-      foodName: "DummyName",
-      price: "12.99$",
-      description: "DummyDescription",
-    },
-  ]);
+const FoodForm = ({
+  title,
+  categories,
+  values,
+  setValues,
+  onFileChange,
+  submitText,
+  onSubmit,
+  isSubmitting,
+  isAuthenticated,
+}) => (
+  <form onSubmit={onSubmit} className="flex flex-col gap-2 rounded-xl bg-[#FFF]">
+    <DialogHeader>
+      <DialogTitle className="text-[13px] font-semibold text-[#09090B]">{title}</DialogTitle>
+    </DialogHeader>
 
-  const [hardLimit, setHardLimit] = useState(6);
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[11px] text-[#71717A]">Dish name</p>
+      <Input
+        className="h-6 text-[10px]"
+        type="text"
+        placeholder="Type dish name"
+        value={values.foodName}
+        onChange={(e) => setValues((prev) => ({ ...prev, foodName: e.target.value }))}
+        required
+      />
+    </div>
 
-  // const addDish = () => {
-  //   setAddDishClicked(!addDishClicked);
-  //   console.log(`This AddDish button is working`);
-  // };
-  return (
-    <div className="bg-[#FFF] flex flex-col gap-4 p-5 rounded-xl">
-      <div className="flex gap-2 text-[#09090B] font-semibold text-xl">
-        <p>{title}</p>
-        <p> ({foodCounter})</p>
-      </div>
-      <div
-        aria-label="Cards in category section"
-        className="grid grid-cols-4 gap-x-4 gap-y-4"
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[11px] text-[#71717A]">Dish category</p>
+      <select
+        className="h-6 rounded-md border border-[#E4E4E7] px-2 text-[10px]"
+        value={values.category}
+        onChange={(e) => setValues((prev) => ({ ...prev, category: e.target.value }))}
       >
-        <button
-          aria-label="Add new dish to a category"
-          className="cursor-pointer flex flex-col gap-6 items-center justify-center py-2 px-4 border border-dashed border-red-500 h-[310px]  rounded-[20px]  "
-          onClick={addDish}
-        >
-          <div
-            aria-label="Add button"
-            className="flex items-center justify-center py-2 px-4 h-10 w-10 bg-red-500 rounded-full"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="11"
-              height="11"
-              viewBox="0 0 11 11"
-              fill="none"
-            >
-              <path
-                d="M5.16667 0.5V9.83333M0.5 5.16667H9.83333"
-                stroke="#FAFAFA"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <p className="text-[#18181B] text-sm font-normal">
-            Add new Dish to Appetizers
-          </p>
-        </button>
-        {cards.slice(0, hardLimit).map((contentsOfCard, index) => (
-          <Card
-            key={index}
-            isAdmin={true}
-            isAddedToCart={false}
-            dishName={contentsOfCard.foodName}
-            cost={contentsOfCard.price}
-            overview={contentsOfCard.description}
+        {categories.map((cat) => (
+          <option key={cat._id} value={cat._id}>
+            {cat.categoryName}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[11px] text-[#71717A]">Ingredients</p>
+      <Textarea
+        className="min-h-[62px] text-[10px]"
+        placeholder="Type ingredients"
+        value={values.ingredients}
+        onChange={(e) => setValues((prev) => ({ ...prev, ingredients: e.target.value }))}
+        required
+      />
+    </div>
+
+    <div className="grid grid-cols-2 gap-2">
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[11px] text-[#71717A]">Price</p>
+        <Input
+          className="h-6 text-[10px]"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+          value={values.price}
+          onChange={(e) => setValues((prev) => ({ ...prev, price: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[11px] text-[#71717A]">Image</p>
+        <Input className="h-6 text-[9px]" type="file" accept="image/*" onChange={onFileChange} />
+      </div>
+    </div>
+
+    {values.previewImage && (
+      <div className="relative overflow-hidden rounded-lg border border-[#E4E4E7] bg-[#F4F4F5]">
+        <img src={values.previewImage} alt="Dish preview" className="h-[74px] w-full object-cover" />
+      </div>
+    )}
+
+    <DialogFooter className="!justify-end">
+      <Button className="h-6 rounded-md bg-[#18181B] px-3 text-[10px]" type="submit" disabled={isSubmitting || !isAuthenticated}>
+        {isSubmitting ? "Saving..." : submitText}
+      </Button>
+    </DialogFooter>
+  </form>
+);
+
+const EditIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none">
+    <path d="M4 20H8L18 10L14 6L4 16V20Z" stroke="#18181B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+    <path d="M1 1L9 9M9 1L1 9" stroke="#18181B" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
+
+const DishCard = ({ food, onEdit, onDelete }) => (
+  <article className="flex h-[220px] flex-col gap-2 rounded-[14px] border border-[#E4E4E7] bg-white p-2.5">
+    <div className="relative h-[112px] overflow-hidden rounded-xl bg-[#F4F4F5]">
+      {food.image ? (
+        <img src={food.image} alt={food.foodName} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full items-center justify-center text-xs text-[#71717A]">No image</div>
+      )}
+      <button
+        type="button"
+        className="absolute bottom-2 right-8 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow"
+        onClick={onEdit}
+      >
+        <EditIcon />
+      </button>
+      <button
+        type="button"
+        className="absolute bottom-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow"
+        onClick={onDelete}
+      >
+        <CloseIcon />
+      </button>
+    </div>
+
+    <div className="flex items-start justify-between gap-3">
+      <p className="line-clamp-1 text-[10px] font-semibold text-[#EF4444]">{food.foodName}</p>
+      <p className="text-[10px] font-semibold text-[#18181B]">${Number(food.price || 0).toFixed(2)}</p>
+    </div>
+
+    <p className="line-clamp-2 text-[10px] text-[#71717A]">{food.ingredients}</p>
+  </article>
+);
+
+export const Dishmenu = ({
+  category,
+  allCategories = [],
+  onCreateFood,
+  onUpdateFood,
+  onDeleteFood,
+  onUploadDishImage,
+  isAuthenticated,
+}) => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [editingFood, setEditingFood] = useState(null);
+  const [deletingFood, setDeletingFood] = useState(null);
+  const [undoPayload, setUndoPayload] = useState(null);
+  const [showUndoBanner, setShowUndoBanner] = useState(false);
+
+  const defaultValues = useMemo(
+    () => ({
+      foodName: "",
+      price: "",
+      ingredients: "",
+      category: category._id,
+      previewImage: "",
+    }),
+    [category._id]
+  );
+
+  const [formValues, setFormValues] = useState(defaultValues);
+
+  const resetForm = () => {
+    setFormValues(defaultValues);
+    setSelectedFile(null);
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setIsSubmitting(true);
+      let imageUrl = formValues.previewImage || "";
+      if (selectedFile) {
+        imageUrl = await onUploadDishImage(selectedFile);
+      }
+
+      const numericPrice = Number.parseFloat(String(formValues.price).replace(/[^0-9.]/g, ""));
+      if (!Number.isFinite(numericPrice)) {
+        throw new Error("Price must be a valid number");
+      }
+
+      await onCreateFood({
+        foodName: formValues.foodName.trim(),
+        price: numericPrice,
+        ingredients: formValues.ingredients.trim(),
+        category: formValues.category,
+        image: imageUrl,
+      });
+
+      resetForm();
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      alert(error?.response?.data?.error || error?.response?.data?.message || error.message || "Failed to create dish");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openEditDialog = (food) => {
+    setEditingFood(food);
+    setFormValues({
+      foodName: food.foodName || "",
+      price: String(food.price ?? ""),
+      ingredients: food.ingredients || "",
+      category: typeof food.category === "string" ? food.category : food.category?._id || category._id,
+      previewImage: food.image || "",
+    });
+    setSelectedFile(null);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!editingFood?._id) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      let imageUrl = formValues.previewImage || "";
+      if (selectedFile) {
+        imageUrl = await onUploadDishImage(selectedFile);
+      }
+
+      const numericPrice = Number.parseFloat(String(formValues.price).replace(/[^0-9.]/g, ""));
+      if (!Number.isFinite(numericPrice)) {
+        throw new Error("Price must be a valid number");
+      }
+
+      await onUpdateFood({
+        id: editingFood._id,
+        foodName: formValues.foodName.trim(),
+        price: numericPrice,
+        ingredients: formValues.ingredients.trim(),
+        category: formValues.category,
+        image: imageUrl,
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingFood(null);
+      resetForm();
+    } catch (error) {
+      alert(error?.response?.data?.error || error?.response?.data?.message || error.message || "Failed to update dish");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingFood?._id) {
+      return;
+    }
+
+    try {
+      await onDeleteFood({ id: deletingFood._id });
+      setUndoPayload({
+        foodName: deletingFood.foodName,
+        price: deletingFood.price,
+        ingredients: deletingFood.ingredients,
+        category:
+          typeof deletingFood.category === "string"
+            ? deletingFood.category
+            : deletingFood.category?._id || category._id,
+        image: deletingFood.image || "",
+      });
+      setShowUndoBanner(true);
+      setTimeout(() => setShowUndoBanner(false), 8000);
+      setIsDeleteConfirmOpen(false);
+      setDeletingFood(null);
+    } catch (error) {
+      alert(error?.response?.data?.error || error?.response?.data?.message || error.message || "Failed to delete dish");
+    }
+  };
+
+  const handleUndoDelete = async () => {
+    if (!undoPayload) {
+      return;
+    }
+
+    try {
+      await onCreateFood(undoPayload);
+      setShowUndoBanner(false);
+      setUndoPayload(null);
+    } catch (error) {
+      alert(error?.response?.data?.error || error?.response?.data?.message || error.message || "Failed to restore dish");
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-3 rounded-xl bg-[#FFF] p-3">
+      {showUndoBanner && (
+        <div className="flex items-center justify-between rounded-md border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-2">
+          <p className="text-xs text-[#3F3F46]">Dish successfully deleted. Would you like to undo this action?</p>
+          <Button type="button" className="h-7 rounded-md bg-[#18181B] px-3 text-xs" onClick={handleUndoDelete}>
+            Undo
+          </Button>
+        </div>
+      )}
+
+      <div className="flex gap-2 text-[15px] font-semibold text-[#09090B]">
+        <p>{category.categoryName}</p>
+        <p>({category.foods?.length || 0})</p>
+      </div>
+
+      <div aria-label="Cards in category section" className="grid grid-cols-1 gap-2.5 md:grid-cols-3 xl:grid-cols-5">
+        <EmptyCard
+          categoryName={category.categoryName}
+          onClick={() => {
+            resetForm();
+            setIsAddDialogOpen(true);
+          }}
+          disabled={!isAuthenticated}
+        />
+
+        {(category.foods || []).map((food) => (
+          <DishCard
+            key={food._id}
+            food={food}
+            onEdit={() => openEditDialog(food)}
+            onDelete={() => {
+              setDeletingFood(food);
+              setIsDeleteConfirmOpen(true);
+            }}
           />
         ))}
       </div>
-      <Dialog
-        aria-label="Add dish"
-        open={addDishClicked}
-        onOpenChange={setAddDishClicked}
-      >
-        <form>
-          <DialogContent className="sm:max-w-115">
-            <div
-              aria-label="The form that adds dishes"
-              className=" bg-[#FFF] rounded-xl flex flex-col gap-6"
-            >
-              <DialogTitle>
-                {" "}
-                <div aria-label="Header" className="flex justify-between">
-                  {" "}
-                  <p className="text-lg text-[#09090B ] font-semibold">
-                    Add new Dish to Appetizers
-                  </p>
-                </div>
-              </DialogTitle>
 
-              <div className="flex gap-6">
-                {" "}
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm text-[#09090B] font-medium">
-                    Food name
-                  </p>
-                  <Input type="Food name" placeholder="Type food name" />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm text-[#09090B] font-medium">
-                    Food price
-                  </p>
-                  <Input type="Food price" placeholder="Enter price..." />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-[#09090B] font-medium">
-                  Ingredients
-                </p>
-                <Textarea placeholder="List ingredients.." />
-              </div>
-              <div
-                aria-label="Image dropzone"
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const droppedFiles = Array.from(e.dataTransfer.files);
-                  handleDrop(droppedFiles);
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                }}
-                className=" border-2 border-dashed bg-[#E4E4E7] h-[106px] border-gray-300 rounded-md p-4 text-center cursor-pointer hover:border-gray-400 transition-colors"
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <div className="rounded-full bg-white p-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="13"
-                      height="13"
-                      viewBox="0 0 13 13"
-                      fill="none"
-                    >
-                      <path
-                        d="M12.5 8.5L10.4427 6.44267C10.1926 6.19271 9.85355 6.05229 9.5 6.05229C9.14645 6.05229 8.80737 6.19271 8.55733 6.44267L2.5 12.5M1.83333 0.5H11.1667C11.903 0.5 12.5 1.09695 12.5 1.83333V11.1667C12.5 11.903 11.903 12.5 11.1667 12.5H1.83333C1.09695 12.5 0.5 11.903 0.5 11.1667V1.83333C0.5 1.09695 1.09695 0.5 1.83333 0.5ZM5.83333 4.5C5.83333 5.23638 5.23638 5.83333 4.5 5.83333C3.76362 5.83333 3.16667 5.23638 3.16667 4.5C3.16667 3.76362 3.76362 3.16667 4.5 3.16667C5.23638 3.16667 5.83333 3.76362 5.83333 4.5Z"
-                        stroke="#09090B"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Choose a file or drag & drop it here
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      handleDrop(Array.from(e.target.files));
-                    }
-                  }}
-                  className="hidden"
-                  id="file-upload"
-                />
-              </div>
-              <Button className="ml-81 w-fit px-4 py-2 h-10 flex items-center justify-center cursor-pointer">
-                {" "}
-                Add dish{" "}
-              </Button>
-            </div>
-          </DialogContent>
-        </form>
+      <Dialog aria-label="Add dish" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="w-[340px] rounded-xl border-[#E4E4E7] p-3.5">
+          <FoodForm
+            title={`Add new Dish to ${category.categoryName}`}
+            categories={allCategories}
+            values={formValues}
+            setValues={setFormValues}
+            onFileChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              setSelectedFile(file);
+              if (file) {
+                const preview = URL.createObjectURL(file);
+                setFormValues((prev) => ({ ...prev, previewImage: preview }));
+              }
+            }}
+            submitText="Add dish"
+            onSubmit={handleAddSubmit}
+            isSubmitting={isSubmitting}
+            isAuthenticated={isAuthenticated}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog aria-label="Edit dish info" open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="w-[340px] rounded-xl border-[#E4E4E7] p-3.5">
+          <FoodForm
+            title="Dishes info"
+            categories={allCategories}
+            values={formValues}
+            setValues={setFormValues}
+            onFileChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              setSelectedFile(file);
+              if (file) {
+                const preview = URL.createObjectURL(file);
+                setFormValues((prev) => ({ ...prev, previewImage: preview }));
+              }
+            }}
+            submitText="Save changes"
+            onSubmit={handleEditSubmit}
+            isSubmitting={isSubmitting}
+            isAuthenticated={isAuthenticated}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog aria-label="Delete dish confirmation" open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <DialogContent className="w-[320px] rounded-xl border-[#E4E4E7] p-4">
+          <DialogHeader>
+            <DialogTitle className="text-[13px] font-semibold text-[#09090B]">Delete dish</DialogTitle>
+          </DialogHeader>
+          <p className="text-[11px] text-[#52525B]">
+            Are you sure you want to delete <span className="font-semibold">{deletingFood?.foodName}</span>?
+          </p>
+          <DialogFooter className="!justify-end gap-2">
+            <Button type="button" variant="outline" className="h-7 px-3 text-[11px]" onClick={() => setIsDeleteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" className="h-7 bg-[#18181B] px-3 text-[11px]" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );
