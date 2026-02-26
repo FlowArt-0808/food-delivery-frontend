@@ -1,5 +1,4 @@
-import Image from "next/image";
-import SaladImage from "../../_components/images/Salad-3.png";
+import { ProductCard } from "../../_components/productCard";
 
 const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -28,47 +27,37 @@ export const Submenu = ({ title, dishes = [], onSelectDish, cartItemIds = [] }) 
         <h2 className="text-2xl font-semibold text-[#18181b]">{title}</h2>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleDishes.map((dish) => (
-          <article
-            key={`${title}-${dish._id || dish.foodName}`}
-            className="cursor-pointer rounded-3xl border border-[#e4e4e7] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-            onClick={() => onSelectDish?.(dish)}
-          >
-            <div className="relative overflow-hidden rounded-2xl">
-              <Image
-                src={dish.image || SaladImage}
-                alt={dish.foodName || "Dish"}
-                width={700}
-                height={400}
-                className="h-[180px] w-full object-cover"
-                unoptimized={Boolean(dish.image)}
-              />
-              <button
-                type="button"
-                className={`absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition ${
-                  cartItemIds.includes(dish._id)
-                    ? "bg-[#18181B]"
-                    : "bg-white hover:bg-[#f4f4f5]"
-                }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectDish?.(dish);
-                }}
-              >
-                {cartItemIds.includes(dish._id) ? <CheckIcon /> : <PlusIcon />}
-              </button>
-            </div>
+      <div className="flex flex-wrap gap-9">
+        {visibleDishes.map((dish) => {
+          const isInCart = Boolean(dish?._id && cartItemIds.includes(dish._id));
 
-            <div className="mt-4">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-semibold text-[#18181b]">{dish.foodName}</h3>
-                <span className="text-sm font-semibold text-[#ef4444]">${dish.price}</span>
-              </div>
-              <p className="mt-2 text-sm text-[#71717a]">{dish.ingredients}</p>
-            </div>
-          </article>
-        ))}
+          return (
+            <ProductCard
+              key={`${title}-${dish._id || dish.foodName}`}
+              title={dish.foodName || "Unknown dish"}
+              description={dish.ingredients || ""}
+              price={`$${Number(dish.price || 0).toFixed(2)}`}
+              imageSrc={dish.image || ""}
+              imageAlt={dish.foodName || "Dish"}
+              unoptimized={Boolean(dish.image)}
+              onClick={() => onSelectDish?.(dish)}
+              actionSlot={
+                <button
+                  type="button"
+                  className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition ${
+                    isInCart ? "bg-[#18181B]" : "bg-white hover:bg-[#F4F4F5]"
+                  }`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSelectDish?.(dish);
+                  }}
+                >
+                  {isInCart ? <CheckIcon /> : <PlusIcon />}
+                </button>
+              }
+            />
+          );
+        })}
       </div>
     </section>
   );

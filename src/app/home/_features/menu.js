@@ -24,7 +24,7 @@ export const Menu = ({ onSelectDish, cartItemIds = [] }) => {
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-4 pb-20 pt-6 sm:px-8 lg:px-[88px]">
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-20">
         {categories.map((category) => (
           <Submenu
             key={category._id}

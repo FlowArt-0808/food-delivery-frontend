@@ -5,20 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ProductCard } from "@/app/_components/productCard";
 
 const EmptyCard = ({ categoryName, onClick, disabled }) => (
   <button
     aria-label="Add new dish to a category"
-    className="flex h-[220px] cursor-pointer flex-col items-center justify-center gap-2.5 rounded-[14px] border border-dashed border-[#FCA5A5] bg-[#FFF] px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+    className="flex h-[342px] w-full max-w-[397px] cursor-pointer flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-[#FCA5A5] bg-[#FFF] px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
     onClick={onClick}
     disabled={disabled}
   >
-    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500">
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500">
       <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 11 11" fill="none">
         <path d="M5.16667 0.5V9.83333M0.5 5.16667H9.83333" stroke="#FAFAFA" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
-    <p className="max-w-[120px] text-center text-[11px] font-medium text-[#3F3F46]">Add new Dish to {categoryName}</p>
+    <p className="max-w-[220px] text-center text-[16px] font-medium text-[#3F3F46]">
+      Add new dish to {categoryName}
+    </p>
   </button>
 );
 
@@ -123,36 +126,32 @@ const CloseIcon = () => (
 );
 
 const DishCard = ({ food, onEdit, onDelete }) => (
-  <article className="flex h-[220px] flex-col gap-2 rounded-[14px] border border-[#E4E4E7] bg-white p-2.5">
-    <div className="relative h-[112px] overflow-hidden rounded-xl bg-[#F4F4F5]">
-      {food.image ? (
-        <img src={food.image} alt={food.foodName} className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full items-center justify-center text-xs text-[#71717A]">No image</div>
-      )}
-      <button
-        type="button"
-        className="absolute bottom-2 right-8 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow"
-        onClick={onEdit}
-      >
-        <EditIcon />
-      </button>
-      <button
-        type="button"
-        className="absolute bottom-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow"
-        onClick={onDelete}
-      >
-        <CloseIcon />
-      </button>
-    </div>
-
-    <div className="flex items-start justify-between gap-3">
-      <p className="line-clamp-1 text-[10px] font-semibold text-[#EF4444]">{food.foodName}</p>
-      <p className="text-[10px] font-semibold text-[#18181B]">${Number(food.price || 0).toFixed(2)}</p>
-    </div>
-
-    <p className="line-clamp-2 text-[10px] text-[#71717A]">{food.ingredients}</p>
-  </article>
+  <ProductCard
+    title={food.foodName || "Unknown dish"}
+    description={food.ingredients || ""}
+    price={`$${Number(food.price || 0).toFixed(2)}`}
+    imageSrc={food.image || ""}
+    imageAlt={food.foodName || "Dish"}
+    unoptimized={Boolean(food.image)}
+    actionSlot={
+      <>
+        <button
+          type="button"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:bg-[#F4F4F5]"
+          onClick={onEdit}
+        >
+          <EditIcon />
+        </button>
+        <button
+          type="button"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:bg-[#F4F4F5]"
+          onClick={onDelete}
+        >
+          <CloseIcon />
+        </button>
+      </>
+    }
+  />
 );
 
 export const Dishmenu = ({
@@ -331,7 +330,7 @@ export const Dishmenu = ({
         <p>({category.foods?.length || 0})</p>
       </div>
 
-      <div aria-label="Cards in category section" className="grid grid-cols-1 gap-2.5 md:grid-cols-3 xl:grid-cols-5">
+      <div aria-label="Cards in category section" className="flex flex-wrap gap-9">
         <EmptyCard
           categoryName={category.categoryName}
           onClick={() => {

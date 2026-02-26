@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import HeaderLoggedIn from "./_features/header(logged in)";
+import Header from "./_features/header";
 import Footer from "./_features/footer";
 import { Menu } from "./_features/menu";
 import HeroImage from "../_components/images/SpecialDealOfferAd.png";
@@ -24,7 +26,9 @@ const getAuthToken = () => {
     return "";
   }
 
-  return localStorage.getItem("authToken") || localStorage.getItem("token") || "";
+  return (
+    localStorage.getItem("authToken") || localStorage.getItem("token") || ""
+  );
 };
 
 const getAuthHeaders = () => {
@@ -55,29 +59,64 @@ const Home = () => {
   const [cartNotice, setCartNotice] = useState("");
   const [selectedDish, setSelectedDish] = useState(null);
   const [detailQty, setDetailQty] = useState(1);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const cartItemIds = useMemo(() => cartItems.map((item) => item._id), [cartItems]);
+  const cartItemIds = useMemo(
+    () => cartItems.map((item) => item._id),
+    [cartItems],
+  );
+
+  const clearAuthStorage = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
+  };
 
   const fetchMyOrders = async () => {
     const token = getAuthToken();
     if (!token) {
-      return;
+      return [];
     }
 
-    try {
-      const response = await axios.get(`${API_BASE}/authentication/order/my`, {
-        headers: getAuthHeaders(),
-      });
+    const response = await axios.get(`${API_BASE}/authentication/order/my`, {
+      headers: getAuthHeaders(),
+    });
 
-      const list = Array.isArray(response.data) ? response.data : [];
-      setOrders(list.map(normalizeOrder));
-    } catch (error) {
-      console.error("Failed to load orders:", error?.response?.data || error.message);
-    }
+    const list = Array.isArray(response.data) ? response.data : [];
+    return list.map(normalizeOrder);
   };
 
   useEffect(() => {
-    fetchMyOrders();
+    const resolveAuth = async () => {
+      const token = getAuthToken();
+
+      if (!token) {
+        setOrders([]);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      try {
+        const myOrders = await fetchMyOrders();
+        setOrders(myOrders);
+        setIsAuthenticated(true);
+      } catch (error) {
+        if (
+          error?.response?.status === 401 ||
+          error?.response?.status === 403
+        ) {
+          clearAuthStorage();
+        }
+
+        setOrders([]);
+        setIsAuthenticated(false);
+      }
+    };
+
+    resolveAuth();
   }, []);
 
   const openDishDetail = (dish) => {
@@ -94,7 +133,9 @@ const Home = () => {
       const existing = prev.find((item) => item._id === dish._id);
       if (existing) {
         return prev.map((item) =>
-          item._id === dish._id ? { ...item, quantity: item.quantity + qty } : item
+          item._id === dish._id
+            ? { ...item, quantity: item.quantity + qty }
+            : item,
         );
       }
 
@@ -118,7 +159,9 @@ const Home = () => {
 
   const handleIncreaseQty = (id) => {
     setCartItems((prev) =>
-      prev.map((item) => (item._id === id ? { ...item, quantity: item.quantity + 1 } : item))
+      prev.map((item) =>
+        item._id === id ? { ...item, quantity: item.quantity + 1 } : item,
+      ),
     );
   };
 
@@ -126,9 +169,11 @@ const Home = () => {
     setCartItems((prev) =>
       prev
         .map((item) =>
-          item._id === id ? { ...item, quantity: Math.max(0, item.quantity - 1) } : item
+          item._id === id
+            ? { ...item, quantity: Math.max(0, item.quantity - 1) }
+            : item,
         )
-        .filter((item) => item.quantity > 0)
+        .filter((item) => item.quantity > 0),
     );
   };
 
@@ -153,14 +198,15 @@ const Home = () => {
           "Content-Type": "application/json",
           ...getAuthHeaders(),
         },
-      }
+      },
     );
 
     const createdOrder = response?.data?.order;
     if (createdOrder) {
       setOrders((prev) => [normalizeOrder(createdOrder), ...prev]);
     } else {
-      await fetchMyOrders();
+      const myOrders = await fetchMyOrders();
+      setOrders(myOrders);
     }
 
     setCartItems([]);
@@ -168,46 +214,44 @@ const Home = () => {
 
   return (
     <main className="min-h-screen bg-[#3f3f46] text-[#18181b]">
-      <HeaderLoggedIn
-        location={location}
-        onSaveLocation={setLocation}
-        cartItems={cartItems}
-        orders={orders}
-        onPlaceOrder={handlePlaceOrder}
-        onIncreaseQty={handleIncreaseQty}
-        onDecreaseQty={handleDecreaseQty}
-        onRemoveFromCart={handleRemoveFromCart}
-        cartNotice={cartNotice}
-      />
+      {isAuthenticated ? (
+        <HeaderLoggedIn
+          location={location}
+          onSaveLocation={setLocation}
+          cartItems={cartItems}
+          orders={orders}
+          onPlaceOrder={handlePlaceOrder}
+          onIncreaseQty={handleIncreaseQty}
+          onDecreaseQty={handleDecreaseQty}
+          onRemoveFromCart={handleRemoveFromCart}
+          cartNotice={cartNotice}
+        />
+      ) : (
+        <Header />
+      )}
 
-      <section className="mx-auto w-full max-w-[1440px] px-4 pb-6 pt-4 sm:px-8 lg:px-[88px]">
-        <div className="relative overflow-hidden rounded-3xl">
-          <Image
-            src={HeroImage}
-            alt="Special deal offer"
-            className="h-[280px] w-full object-cover sm:h-[360px] lg:h-[420px]"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#18181bcc] via-[#18181b88] to-transparent px-6 py-8 sm:px-10 sm:py-12">
-            <div className="max-w-[560px] text-white">
-              <p className="mb-3 inline-flex rounded-full border border-white/30 bg-black/20 px-3 py-1 text-xs font-medium tracking-wide">
-                Fresh fast delivered
-              </p>
-              <h1 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-                Fastest delivery, best menu in your neighborhood
-              </h1>
-              <p className="mt-4 text-sm text-white/85 sm:text-base">
-                Order in minutes and get your favorites delivered hot and fresh.
-              </p>
-            </div>
-          </div>
-        </div>
+      <section
+        aria-label="Hero Poster"
+        className="w-full"
+      >
+        <Image
+          src={HeroImage}
+          alt="Hero poster"
+          className="h-[280px] w-full object-cover sm:h-[360px] lg:h-[420px]"
+          priority
+        />
       </section>
 
-      <Menu onSelectDish={openDishDetail} cartItemIds={cartItemIds} />
+      <Menu
+        onSelectDish={openDishDetail}
+        cartItemIds={isAuthenticated ? cartItemIds : []}
+      />
       <Footer />
 
-      <Dialog open={Boolean(selectedDish)} onOpenChange={() => setSelectedDish(null)}>
+      <Dialog
+        open={Boolean(selectedDish)}
+        onOpenChange={() => setSelectedDish(null)}
+      >
         <DialogContent className="max-w-[860px] border-none bg-transparent p-0 shadow-none [&>button]:right-4 [&>button]:top-4 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/90 [&>button]:p-1">
           {selectedDish && (
             <div className="grid overflow-hidden rounded-2xl border border-[#E4E4E7] bg-white sm:grid-cols-[1.15fr_1fr]">
@@ -227,21 +271,30 @@ const Home = () => {
                     {selectedDish.foodName}
                   </DialogTitle>
                 </DialogHeader>
-                <p className="mt-2 text-sm leading-6 text-[#52525B]">{selectedDish.ingredients}</p>
+                <p className="mt-2 text-sm leading-6 text-[#52525B]">
+                  {selectedDish.ingredients}
+                </p>
                 <div className="mt-10 flex items-end justify-between">
                   <div>
                     <p className="text-xs text-[#71717A]">Total price</p>
-                    <p className="text-[30px] font-semibold text-[#18181B]">${(Number(selectedDish.price || 0) * detailQty).toFixed(2)}</p>
+                    <p className="text-[30px] font-semibold text-[#18181B]">
+                      $
+                      {(Number(selectedDish.price || 0) * detailQty).toFixed(2)}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="h-8 w-8 rounded-full border border-[#E4E4E7] text-sm"
-                      onClick={() => setDetailQty((prev) => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setDetailQty((prev) => Math.max(1, prev - 1))
+                      }
                     >
                       -
                     </button>
-                    <span className="w-6 text-center text-sm font-medium">{detailQty}</span>
+                    <span className="w-6 text-center text-sm font-medium">
+                      {detailQty}
+                    </span>
                     <button
                       type="button"
                       className="h-8 w-8 rounded-full border border-[#18181B] text-sm"
@@ -252,16 +305,26 @@ const Home = () => {
                   </div>
                 </div>
                 <DialogFooter className="mt-4">
-                  <Button
-                    type="button"
-                    className="h-10 w-full rounded-full bg-[#18181B] text-sm font-semibold"
-                    onClick={() => {
-                      handleAddToCart(selectedDish, detailQty);
-                      setSelectedDish(null);
-                    }}
-                  >
-                    Add to cart
-                  </Button>
+                  {isAuthenticated ? (
+                    <Button
+                      type="button"
+                      className="h-10 w-full rounded-full bg-[#18181B] text-sm font-semibold"
+                      onClick={() => {
+                        handleAddToCart(selectedDish, detailQty);
+                        setSelectedDish(null);
+                      }}
+                    >
+                      Add to cart
+                    </Button>
+                  ) : (
+                    <Button
+                      asChild
+                      type="button"
+                      className="h-10 w-full rounded-full bg-[#18181B] text-sm font-semibold"
+                    >
+                      <Link href="/login">Log in to order</Link>
+                    </Button>
+                  )}
                 </DialogFooter>
               </div>
             </div>
