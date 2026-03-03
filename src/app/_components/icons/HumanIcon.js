@@ -1,10 +1,10 @@
 import * as React from "react";
-const HumanIcon = (props) => (
+const HumanIcon = ({ className, ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width={11}
-    height={13}
     fill="none"
+    viewBox="0 0 11 13"
+    className={className}
     {...props}
   >
     <path

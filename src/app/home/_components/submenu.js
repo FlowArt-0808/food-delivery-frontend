@@ -24,7 +24,7 @@ export const Submenu = ({ title, dishes = [], onSelectDish, cartItemIds = [] }) 
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-[#18181b]">{title}</h2>
+        <h2 className="text-2xl font-semibold text-[#FFFFFF]">{title}</h2>
       </div>
 
       <div className="flex flex-wrap gap-9">
@@ -44,7 +44,7 @@ export const Submenu = ({ title, dishes = [], onSelectDish, cartItemIds = [] }) 
               actionSlot={
                 <button
                   type="button"
-                  className={`flex h-10 w-10 items-center justify-center rounded-full shadow-md transition ${
+                  className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full shadow-md transition ${
                     isInCart ? "bg-[#18181B]" : "bg-white hover:bg-[#F4F4F5]"
                   }`}
                   onClick={(event) => {

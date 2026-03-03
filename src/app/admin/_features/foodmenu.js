@@ -20,6 +20,7 @@ export const FoodMenu = () => {
     error,
     fetchMenu,
     createCategory,
+    deleteCategory,
     createFood,
     updateFood,
     deleteFood,
@@ -30,6 +31,10 @@ export const FoodMenu = () => {
   const [categoryName, setCategoryName] = useState("");
   const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState("all");
+  const [showCategoryAddedToast, setShowCategoryAddedToast] = useState(false);
+  const [categoryDeleteTarget, setCategoryDeleteTarget] = useState(null);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+  const [showCategoryDeletedToast, setShowCategoryDeletedToast] = useState(false);
 
   useEffect(() => {
     fetchMenu();
@@ -56,6 +61,8 @@ export const FoodMenu = () => {
       await createCategory(categoryName);
       setCategoryName("");
       setIsCategoryDialogOpen(false);
+      setShowCategoryAddedToast(true);
+      setTimeout(() => setShowCategoryAddedToast(false), 2600);
     } catch (error) {
       alert(error?.response?.data?.message || error.message || "Failed to create category");
     } finally {
@@ -63,8 +70,67 @@ export const FoodMenu = () => {
     }
   };
 
+  const handleDeleteCategory = async () => {
+    if (!categoryDeleteTarget?._id) {
+      return;
+    }
+
+    try {
+      setIsDeletingCategory(true);
+      await deleteCategory({
+        id: categoryDeleteTarget._id,
+        categoryName: categoryDeleteTarget.categoryName,
+      });
+
+      if (activeCategoryFilter === categoryDeleteTarget._id) {
+        setActiveCategoryFilter("all");
+      }
+
+      setCategoryDeleteTarget(null);
+      setShowCategoryDeletedToast(true);
+      setTimeout(() => setShowCategoryDeletedToast(false), 2600);
+    } catch (error) {
+      alert(error?.response?.data?.message || error.message || "Failed to delete category");
+    } finally {
+      setIsDeletingCategory(false);
+    }
+  };
+
   return (
     <div aria-label="All dishes and their category" className="relative flex flex-col gap-4 bg-[#E4E4E5]">
+      {showCategoryAddedToast && (
+        <div className="pointer-events-none fixed left-1/2 top-5 z-[130] -translate-x-1/2">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#52525B] bg-[#18181B] px-5 py-3 text-sm text-[#FAFAFA] shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none">
+              <path
+                d="M14.4 1.2L6 10.8L1.6 6.4"
+                stroke="#FAFAFA"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p>New Category is being added to the menu</p>
+          </div>
+        </div>
+      )}
+      {showCategoryDeletedToast && (
+        <div className="pointer-events-none fixed left-1/2 top-5 z-[130] -translate-x-1/2">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#52525B] bg-[#18181B] px-5 py-3 text-sm text-[#FAFAFA] shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none">
+              <path
+                d="M14.4 1.2L6 10.8L1.6 6.4"
+                stroke="#FAFAFA"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p>Category has been deleted from the menu</p>
+          </div>
+        </div>
+      )}
+
       {!hasAuthToken && (
         <div className="mx-6 mt-6 rounded-md border border-[#fca5a5] bg-[#fff1f2] px-4 py-3 text-sm text-[#9f1239]">
           You are not logged in. Please log in first to add categories or dishes.
@@ -98,6 +164,14 @@ export const FoodMenu = () => {
               }`}
               key={category._id}
               onClick={() => setActiveCategoryFilter(category._id)}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                if (!hasAuthToken) {
+                  return;
+                }
+                setCategoryDeleteTarget(category);
+              }}
+              title="Right click to delete this category"
             >
               {category.categoryName}
               <div className="rounded-full bg-[#18181B] px-1.5 py-0.5 text-[8px] font-semibold text-[#FAFAFA]">
@@ -161,6 +235,30 @@ export const FoodMenu = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(categoryDeleteTarget)} onOpenChange={(open) => !open && setCategoryDeleteTarget(null)}>
+        <DialogContent className="w-[340px] rounded-xl border-[#E4E4E7] p-4">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold text-[#09090B]">Delete category</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-[#52525B]">
+            Delete <span className="font-semibold text-[#09090B]">{categoryDeleteTarget?.categoryName}</span> category?
+          </p>
+          <DialogFooter className="!justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setCategoryDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#18181B] text-white"
+              onClick={handleDeleteCategory}
+              disabled={isDeletingCategory}
+            >
+              {isDeletingCategory ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

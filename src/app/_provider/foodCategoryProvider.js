@@ -73,6 +73,27 @@ export const FoodCategoryProvider = ({ children }) => {
     await fetchMenu();
   };
 
+  const deleteCategory = async ({ id, categoryName }) => {
+    ensureAuthToken();
+
+    if (!id && !categoryName) {
+      throw new Error("Category identifier is required");
+    }
+
+    try {
+      await axios.delete(`${API_BASE}/authentication/foodCategory`, {
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        data: { id, categoryName },
+      });
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message || "Failed to delete category";
+      const apiError = err?.response?.data?.error;
+      throw new Error(apiError ? `${apiMessage}: ${apiError}` : apiMessage);
+    }
+
+    await fetchMenu();
+  };
+
   const uploadDishImage = async (file) => {
     if (!file) {
       return "";
@@ -162,6 +183,7 @@ export const FoodCategoryProvider = ({ children }) => {
       error,
       fetchMenu,
       createCategory,
+      deleteCategory,
       uploadDishImage,
       createFood,
       updateFood,

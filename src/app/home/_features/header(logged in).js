@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import NomNomLogoRed from "@/app/_components/icons/NomNomLogoRed";
+import HumanIcon from "@/app/_components/icons/HumanIcon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +22,54 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import SaladImage from "@/app/_components/images/Salad-3.png";
+
+const ORDER_PLACED_ILLUSTRATION_SRC = "/order-success-illustration.png";
+
+const TrayFoodIcon = ({ className = "h-14 w-14", stroke = "#EF4444" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" className={className}>
+    <path d="M14 33.5H50" stroke={stroke} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M22 33.5C22 25.216 28.716 18.5 37 18.5C45.284 18.5 52 25.216 52 33.5H22Z"
+      stroke={stroke}
+      strokeWidth="3.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M14 33.5L18 44L45 37.2" stroke={stroke} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M37 15V18.5" stroke={stroke} strokeWidth="3.2" strokeLinecap="round" />
+  </svg>
+);
+
+const BowlIcon = ({ className = "h-7 w-7", stroke = "#A1A1AA" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className}>
+    <path d="M4.5 11H19.5" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+    <path
+      d="M6.5 11C6.5 14.038 8.962 16.5 12 16.5C15.038 16.5 17.5 14.038 17.5 11"
+      stroke={stroke}
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M8.5 19H15.5" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M8 4.5C9 5.7 9 7 8 8.2" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M12 3.8C13 5 13 6.3 12 7.5" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M16 4.5C17 5.7 17 7 16 8.2" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const ClockIcon = ({ className = "h-7 w-7", stroke = "#A1A1AA" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className}>
+    <circle cx="12" cy="12" r="9" stroke={stroke} strokeWidth="1.8" />
+    <path d="M12 8V12L15 10" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const MapIcon = ({ className = "h-7 w-7", stroke = "#A1A1AA" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className={className}>
+    <path d="M4 6L10.5 3L17 6L20 4.5V18L13.5 21L7 18L4 19.5V6Z" stroke={stroke} strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M10.5 3V18M17 6V21" stroke={stroke} strokeWidth="1.8" />
+  </svg>
+);
 
 const HeaderLoggedIn = ({
   location,
@@ -41,6 +90,30 @@ const HeaderLoggedIn = ({
   const [panelError, setPanelError] = useState("");
   const [isPanelAlertOpen, setIsPanelAlertOpen] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  const signedInEmail = useMemo(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+    if (!token) {
+      return "";
+    }
+
+    try {
+      const base64Url = token.split(".")[1];
+      if (!base64Url) {
+        return "";
+      }
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+      const payload = JSON.parse(atob(padded));
+      return payload?.email || "";
+    } catch {
+      return "";
+    }
+  }, []);
 
   useEffect(() => {
     setLocationInput(location || "");
@@ -164,19 +237,15 @@ const HeaderLoggedIn = ({
               <button
                 type="button"
                 aria-label="User"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-red-500 p-0"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="13" viewBox="0 0 11 13" fill="none">
-                  <path
-                    d="M9.83333 12.5V11.1667C9.83333 10.4594 9.55238 9.78115 9.05228 9.28105C8.55219 8.78095 7.87391 8.5 7.16667 8.5H3.16667C2.45942 8.5 1.78115 8.78095 1.28105 9.28105C0.780951 9.78115 0.5 10.4594 0.5 11.1667V12.5M7.83333 3.16667C7.83333 4.63943 6.63943 5.83333 5.16667 5.83333C3.69391 5.83333 2.5 4.63943 2.5 3.16667C2.5 1.69391 3.69391 0.5 5.16667 0.5C6.63943 0.5 7.83333 1.69391 7.83333 3.16667Z"
-                    stroke="#FAFAFA"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <HumanIcon className="h-[13px] w-[11px] shrink-0 translate-y-[0.5px]" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-[220px]">
+              <div className="px-2 py-1.5 text-xs text-[#71717A]">
+                Email: <span className="text-[#18181B]">{signedInEmail || "-"}</span>
+              </div>
               <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -186,153 +255,288 @@ const HeaderLoggedIn = ({
       {cartNotice && (
         <div className="pointer-events-none fixed left-1/2 top-6 z-[120] -translate-x-1/2">
           <Alert className="w-fit border-[#3f3f46] bg-[#18181B] px-3 py-2 text-[#FAFAFA] shadow-lg">
-            <AlertTitle className="text-sm font-medium">{cartNotice}</AlertTitle>
+            <AlertTitle className="flex items-center gap-2 text-sm font-medium">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#22C55E]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="7" viewBox="0 0 10 7" fill="none">
+                  <path
+                    d="M9 1L3.5 6L1 3.72727"
+                    stroke="white"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              {cartNotice}
+            </AlertTitle>
             <AlertDescription className="hidden" />
           </Alert>
         </div>
       )}
 
       {isCartOpen && (
-        <div className="fixed inset-0 z-[90] bg-black/30" onClick={() => setIsCartOpen(false)}>
-          <div
-            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[372px] flex-col bg-[#F4F4F5] p-2.5 shadow-2xl sm:max-w-[380px]"
+        <div className="fixed inset-0 z-[90] bg-black/35" onClick={() => setIsCartOpen(false)}>
+          <aside
+            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[560px] flex-col gap-4 overflow-hidden bg-[#3F3F46] p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-          <div className="mb-2.5 flex items-center justify-between">
-            <div className="flex rounded-full bg-white p-1 text-xs shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-[#F4F4F5]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M3 4H4.5L6.4 13.3C6.48 13.69 6.69 14.04 7.01 14.28C7.33 14.52 7.72 14.65 8.13 14.64H17.03C17.43 14.64 17.82 14.51 18.14 14.27C18.45 14.03 18.66 13.69 18.75 13.31L20 7.6H5.4"
+                    stroke="#E4E4E7"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="9" cy="19" r="1.7" stroke="#E4E4E7" strokeWidth="1.8" />
+                  <circle cx="17" cy="19" r="1.7" stroke="#E4E4E7" strokeWidth="1.8" />
+                </svg>
+                <h2 className="text-[24px] font-semibold leading-none">Order detail</h2>
+              </div>
+
               <button
                 type="button"
-                className={`rounded-full px-4 py-1.5 text-[11px] font-semibold ${activeTab === "cart" ? "bg-[#ef4444] text-white" : "text-[#18181B]"}`}
-                onClick={() => setActiveTab("cart")}
+                className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[#E4E4E7] text-[#E4E4E7]"
+                onClick={() => setIsCartOpen(false)}
+                aria-label="Close order detail panel"
               >
-                Cart
-              </button>
-              <button
-                type="button"
-                className={`rounded-full px-4 py-1.5 text-[11px] font-semibold ${activeTab === "order" ? "bg-[#ef4444] text-white" : "text-[#18181B]"}`}
-                onClick={() => setActiveTab("order")}
-              >
-                Order
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
               </button>
             </div>
-            <button
-              type="button"
-              className="text-xs text-[#71717A]"
-              onClick={() => setIsCartOpen(false)}
-            >
-              To close area
-            </button>
-          </div>
 
-          {activeTab === "cart" && (
-            <div className="flex flex-1 flex-col space-y-2.5">
-              <div className="max-h-[370px] space-y-2 overflow-auto rounded-2xl bg-white p-2">
-                {!cartItems.length && (
-                  <div className="rounded-xl border p-6 text-center text-sm text-[#71717A]">
-                    Your cart is empty.
-                  </div>
-                )}
+            <div className="rounded-full bg-[#F4F4F5] p-1">
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  className={`h-12 cursor-pointer rounded-full text-[22px] leading-none ${activeTab === "cart" ? "bg-[#EF4444] text-white" : "text-[#09090B]"}`}
+                  onClick={() => setActiveTab("cart")}
+                >
+                  Cart
+                </button>
+                <button
+                  type="button"
+                  className={`h-12 cursor-pointer rounded-full text-[22px] leading-none ${activeTab === "order" ? "bg-[#EF4444] text-white" : "text-[#09090B]"}`}
+                  onClick={() => setActiveTab("order")}
+                >
+                  Order
+                </button>
+              </div>
+            </div>
 
-                {cartItems.map((item) => (
-                  <div key={item._id} className="rounded-xl border border-[#E4E4E7] bg-white p-2.5">
-                    <div className="flex gap-2.5">
-                      <Image
-                        src={item.image || SaladImage}
-                        alt={item.foodName}
-                        width={72}
-                        height={60}
-                        className="h-[60px] w-[72px] rounded-lg object-cover"
-                        unoptimized={Boolean(item.image)}
+            <div className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-[#F4F4F5] p-5">
+              <h3
+                className={`text-[26px] font-semibold leading-none ${
+                  activeTab === "cart" ? "text-[#71717A]" : "text-[#09090B]"
+                }`}
+              >
+                {activeTab === "cart" ? "My cart" : "Order history"}
+              </h3>
+
+              {activeTab === "cart" ? (
+                cartItems.length ? (
+                  <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3">
+                    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+                      {cartItems.map((item) => (
+                        <article key={item._id || item.id} className="border-b border-dashed border-[#A1A1AA] pb-3 last:border-b-0">
+                          <div className="flex gap-3">
+                            <Image
+                              src={item.image || SaladImage}
+                              alt={item.foodName}
+                              width={120}
+                              height={120}
+                              className="h-[120px] w-[120px] rounded-2xl object-cover"
+                              unoptimized={Boolean(item.image)}
+                            />
+
+                            <div className="flex flex-1 flex-col justify-between">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="line-clamp-1 text-[18px] font-semibold text-[#EF4444]">
+                                    {item.foodName}
+                                  </p>
+                                  <p className="mt-1 line-clamp-2 text-[14px] leading-5 text-[#18181B]">
+                                    {item.ingredients ||
+                                      item.description ||
+                                      "Fluffy pancakes stacked with fruits, cream, syrup, and powdered sugar."}
+                                  </p>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#EF4444] text-[24px] leading-none text-[#EF4444]"
+                                  onClick={() => onRemoveFromCart(item._id || item.id)}
+                                  aria-label={`Remove ${item.foodName}`}
+                                >
+                                  ×
+                                </button>
+                              </div>
+
+                              <div className="mt-2 flex items-center justify-between">
+                                <div className="flex items-center gap-4 text-[24px] leading-none text-[#18181B]">
+                                  <button
+                                    type="button"
+                                    className="cursor-pointer"
+                                    onClick={() => onDecreaseQty(item._id || item.id)}
+                                  >
+                                    −
+                                  </button>
+                                  <span className="min-w-[24px] text-center text-[24px] font-medium">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="cursor-pointer"
+                                    onClick={() => onIncreaseQty(item._id || item.id)}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <p className="text-[34px] font-semibold leading-none text-[#09090B]">
+                                  ${Number(item.price || 0).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+
+                    <div className="pt-1">
+                      <p className="text-[26px] font-semibold leading-none text-[#71717A]">Delivery location</p>
+                      <Input
+                        className="mt-3 h-[64px] rounded-2xl border-[#D4D4D8] px-4 text-[16px] text-[#71717A] placeholder:text-[#71717A]"
+                        placeholder="Please share your complete address"
+                        value={locationInput}
+                        onChange={(e) => setLocationInput(e.target.value)}
                       />
-                      <div className="flex flex-1 flex-col justify-between">
-                        <p className="line-clamp-1 text-xs font-semibold text-[#ef4444]">{item.foodName}</p>
-                        <p className="text-[11px] text-[#71717A]">${Number(item.price || 0).toFixed(2)}</p>
-                      </div>
-                      <button
-                        type="button"
-                        className="self-start text-[11px] text-red-500"
-                        onClick={() => onRemoveFromCart(item._id)}
-                      >
-                        x
-                      </button>
-                    </div>
-                    <div className="mt-2 flex items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        className="h-6 w-6 rounded-full border border-[#E4E4E7] text-[12px]"
-                        onClick={() => onDecreaseQty(item._id)}
-                      >
-                        -
-                      </button>
-                      <span className="w-4 text-center text-xs">{item.quantity}</span>
-                      <button
-                        type="button"
-                        className="h-6 w-6 rounded-full border border-[#18181B] text-[12px]"
-                        onClick={() => onIncreaseQty(item._id)}
-                      >
-                        +
-                      </button>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="mt-4 flex flex-1 flex-col items-center justify-center rounded-3xl bg-[#E4E4E7] px-6 py-6 text-center">
+                    <div className="mx-auto w-fit">
+                      <TrayFoodIcon />
+                    </div>
+                    <p className="mt-3 text-[22px] font-semibold leading-none text-[#09090B]">Your cart is empty</p>
+                    <p className="mx-auto mt-2 max-w-[92%] text-[16px] leading-[1.35] text-[#71717A]">
+                      Hungry? 🍔 Add some delicious dishes to your cart and satisfy your cravings!
+                    </p>
+                  </div>
+                )
+              ) : orders.length ? (
+                <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                  {orders.map((order) => {
+                    const status = String(order.status || "").toLowerCase();
+                    const dateLabel = order.createdAt
+                      ? new Date(order.createdAt).toLocaleDateString("en-CA").replaceAll("-", "/")
+                      : "-";
+                    const orderRef = `#${order.orderNumber || String(order.id || "").slice(0, 5)}`;
+                    const orderItems = order.items || order.foodOrderItems || [];
+                    const statusClass =
+                      status === "delivered"
+                        ? "bg-[#E4E4E7] text-[#18181B]"
+                        : "border border-[#EF4444] bg-transparent text-[#18181B]";
+
+                    return (
+                      <article
+                        key={order.id || order._id}
+                        className="border-b border-dashed border-[#A1A1AA] pb-4 last:border-b-0"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[24px] font-semibold leading-none text-[#09090B]">
+                            ${Number(order.totalPrice || 0).toFixed(2)} ({orderRef})
+                          </p>
+                          <span
+                            className={`inline-flex h-9 items-center rounded-full px-4 text-[16px] font-medium ${statusClass}`}
+                          >
+                            {status ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending"}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 space-y-2 text-[16px] text-[#71717A]">
+                          {orderItems.map((orderItem, idx) => (
+                            <div
+                              key={`${order.id || order._id}-${idx}`}
+                              className="flex items-center justify-between gap-3"
+                            >
+                              <div className="flex min-w-0 items-center gap-2">
+                                <BowlIcon className="h-7 w-7 shrink-0" />
+                                <span className="line-clamp-1">{orderItem.foodName}</span>
+                              </div>
+                              <span className="shrink-0">x {orderItem.quantity}</span>
+                            </div>
+                          ))}
+
+                          <div className="flex items-center gap-2">
+                            <ClockIcon className="h-7 w-7" />
+                            <span>{dateLabel}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <MapIcon className="h-7 w-7" />
+                            <span className="line-clamp-1">{order.deliveryAddress || "-"}</span>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 flex flex-1 flex-col items-center justify-center rounded-3xl bg-[#E4E4E7] px-6 py-6 text-center">
+                  <div className="mx-auto w-fit">
+                    <TrayFoodIcon />
+                  </div>
+                  <p className="mt-3 text-[22px] font-semibold leading-none text-[#09090B]">No Orders Yet?</p>
+                  <p className="mx-auto mt-2 max-w-[92%] text-[16px] leading-[1.35] text-[#71717A]">
+                    🍕 "You haven't placed any orders yet. Start exploring our menu and satisfy your cravings!"
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="shrink-0 rounded-[28px] bg-[#F4F4F5] p-5">
+              <h3 className="text-[26px] font-semibold leading-none text-[#71717A]">Payment info</h3>
+
+              <div className="mt-3 space-y-2 text-[18px] text-[#71717A]">
+                <div className="flex items-center justify-between">
+                  <span>Items</span>
+                  <span className="font-medium text-[#09090B]">
+                    {cartItems.length ? `$${cartTotal.toFixed(2)}` : "-"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Shipping</span>
+                  <span className="font-medium text-[#09090B]">{cartItems.length ? "0.99$" : "-"}</span>
+                </div>
               </div>
 
-              <div className="rounded-2xl border border-[#E4E4E7] bg-white p-2.5">
-                <p className="text-xs text-[#71717A]">Delivery location</p>
-                <Input
-                  className="mt-2 border-[#E4E4E7] text-xs"
-                  placeholder="Please write your delivery address!"
-                  value={locationInput}
-                  onChange={(e) => setLocationInput(e.target.value)}
-                />
-              </div>
+              <div className="my-3 border-t border-dashed border-[#A1A1AA]" />
 
-              <div className="rounded-2xl border border-[#E4E4E7] bg-white p-2.5 text-sm">
-                <div className="flex justify-between text-xs text-[#71717A]">
-                  <span>Payment info</span>
-                  <span>${cartTotal.toFixed(2)}</span>
-                </div>
-                <div className="mt-2 flex justify-between text-sm font-semibold">
-                  <span>Total</span>
-                  <span>${cartTotal.toFixed(2)}</span>
-                </div>
+              <div className="flex items-center justify-between text-[20px]">
+                <span className="text-[#71717A]">Total</span>
+                <span className="font-semibold text-[#09090B]">
+                  {cartItems.length ? `$${(cartTotal + 0.99).toFixed(2)}` : "-"}
+                </span>
               </div>
 
               <Button
                 type="button"
-                className="h-9 w-full rounded-full bg-[#ef4444] text-sm font-semibold"
+                className={`mt-3 h-11 w-full rounded-full text-[18px] font-medium ${
+                  cartItems.length
+                    ? "cursor-pointer bg-[#EF4444] text-white hover:bg-[#dc2626]"
+                    : "bg-[#E7C7C9] text-white hover:bg-[#E7C7C9]"
+                }`}
                 onClick={handleCheckout}
-                disabled={isPlacingOrder}
+                disabled={isPlacingOrder || !cartItems.length}
               >
-                {isPlacingOrder ? "Ordering..." : "Continue"}
+                {isPlacingOrder ? "Ordering..." : "Checkout"}
               </Button>
             </div>
-          )}
-
-          {activeTab === "order" && (
-            <div className="space-y-3 rounded-2xl bg-white p-2">
-              {!orders.length && (
-                <div className="rounded-xl border p-6 text-center">
-                  <p className="text-sm font-semibold text-[#09090B]">No orders yet</p>
-                  <p className="mt-1 text-xs text-[#71717A]">Your order history will appear here.</p>
-                </div>
-              )}
-
-              {orders.map((order) => (
-                <div key={order.id || order._id} className="rounded-xl border border-[#E4E4E7] p-3">
-                  <p className="text-sm font-semibold">
-                    Order #{order.orderNumber || String(order.id || order._id || "").slice(0, 8)}
-                  </p>
-                  <p className="text-xs text-[#71717A]">{new Date(order.createdAt).toLocaleString()}</p>
-                  <p className="mt-1 text-xs text-[#71717A]">
-                    Status: {String(order.status || "").charAt(0).toUpperCase() + String(order.status || "").slice(1)}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold">${Number(order.totalPrice || 0).toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          )}
-          </div>
+          </aside>
         </div>
       )}
 
@@ -368,16 +572,36 @@ const HeaderLoggedIn = ({
       </Dialog>
 
       <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
-        <DialogContent className="max-w-[340px] text-center">
-          <DialogHeader>
-            <DialogTitle className="text-base">Your order has been successfully placed!</DialogTitle>
+        <DialogContent className="h-[439px] w-[664px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[36px] border-none bg-[#F3F4F6] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.35)] !flex !flex-col !items-center !justify-between !gap-0">
+          <DialogHeader className="w-full !space-y-0 text-center">
+            <DialogTitle className="mx-auto w-full text-center whitespace-nowrap text-[22px] font-semibold leading-[1.2] text-[#09090B]">
+              Your order has been successfully placed !
+            </DialogTitle>
+            <DialogDescription className="hidden" />
           </DialogHeader>
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#ef4444] text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M18 3V33M3 18H33" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.0" />
-              <path d="M10 18L16 24L27 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <Image
+              src={ORDER_PLACED_ILLUSTRATION_SRC}
+              alt="Order placed illustration"
+              width={156}
+              height={266}
+              className="h-[265.7px] w-[156px]"
+              priority={false}
+            />
           </div>
+          <DialogFooter className="!m-0 !w-full !justify-center !px-0 !pb-0 !pt-2">
+            <Button
+              type="button"
+              className="h-[44px] w-[188px] rounded-full bg-[#E4E4E7] px-3 py-2 text-base font-normal text-[#18181B] hover:bg-[#D4D4D8]"
+              onClick={() => {
+                setIsSuccessOpen(false);
+                setIsCartOpen(false);
+                setActiveTab("cart");
+              }}
+            >
+              Back to home
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -252,20 +252,22 @@ const Home = () => {
         open={Boolean(selectedDish)}
         onOpenChange={() => setSelectedDish(null)}
       >
-        <DialogContent className="max-w-[860px] border-none bg-transparent p-0 shadow-none [&>button]:right-4 [&>button]:top-4 [&>button]:z-20 [&>button]:rounded-full [&>button]:bg-white/90 [&>button]:p-1">
+        <DialogContent className="h-[412px] w-[826px] max-w-none sm:max-w-none border-none bg-transparent p-0 shadow-none [&>button]:right-4 [&>button]:top-4 [&>button]:z-20 [&>button]:flex [&>button]:h-9 [&>button]:w-9 [&>button]:items-center [&>button]:justify-center [&>button]:rounded-full [&>button]:border [&>button]:border-[#18181B] [&>button]:bg-transparent [&>button]:p-0 [&>button]:hover:bg-transparent [&>button]:data-[state=open]:bg-transparent">
           {selectedDish && (
-            <div className="grid overflow-hidden rounded-2xl border border-[#E4E4E7] bg-white sm:grid-cols-[1.15fr_1fr]">
-              <div className="bg-[#f4f4f5] p-2 sm:p-3">
-                <Image
-                  src={selectedDish.image || SaladImage}
-                  alt={selectedDish.foodName}
-                  width={760}
-                  height={460}
-                  className="h-[240px] w-full rounded-xl object-cover sm:h-[300px]"
-                  unoptimized={Boolean(selectedDish.image)}
-                />
+            <div className="grid h-full box-border overflow-hidden rounded-2xl border border-[#E4E4E7] bg-white p-6 sm:grid-cols-[377px_minmax(0,1fr)]">
+              <div className="flex items-center justify-center bg-[#f4f4f5]">
+                <div className="relative h-[364px] w-[377px] overflow-hidden rounded-xl">
+                  <Image
+                    src={selectedDish.image || SaladImage}
+                    alt={selectedDish.foodName}
+                    fill
+                    sizes="377px"
+                    className="object-fill"
+                    unoptimized={Boolean(selectedDish.image)}
+                  />
+                </div>
               </div>
-              <div className="flex flex-col justify-between p-4 sm:p-5">
+              <div className="flex h-[364px] flex-col justify-between p-4">
                 <DialogHeader className="space-y-2 text-left">
                   <DialogTitle className="text-3xl font-semibold leading-tight text-[#ef4444]">
                     {selectedDish.foodName}
@@ -274,30 +276,30 @@ const Home = () => {
                 <p className="mt-2 text-sm leading-6 text-[#52525B]">
                   {selectedDish.ingredients}
                 </p>
-                <div className="mt-10 flex items-end justify-between">
-                  <div>
+                <div className="mt-10 flex items-end justify-between gap-14">
+                  <div className="min-w-[170px]">
                     <p className="text-xs text-[#71717A]">Total price</p>
-                    <p className="text-[30px] font-semibold text-[#18181B]">
+                    <p className="whitespace-nowrap text-[30px] font-semibold tabular-nums text-[#18181B]">
                       $
                       {(Number(selectedDish.price || 0) * detailQty).toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
-                      className="h-8 w-8 rounded-full border border-[#E4E4E7] text-sm"
+                      className="h-8 w-8 cursor-pointer rounded-full border border-[#E4E4E7] text-sm"
                       onClick={() =>
                         setDetailQty((prev) => Math.max(1, prev - 1))
                       }
                     >
                       -
                     </button>
-                    <span className="w-6 text-center text-sm font-medium">
+                    <span className="w-7 text-center text-sm font-medium tabular-nums">
                       {detailQty}
                     </span>
                     <button
                       type="button"
-                      className="h-8 w-8 rounded-full border border-[#18181B] text-sm"
+                      className="h-8 w-8 cursor-pointer rounded-full border border-[#18181B] text-sm"
                       onClick={() => setDetailQty((prev) => prev + 1)}
                     >
                       +
@@ -308,7 +310,7 @@ const Home = () => {
                   {isAuthenticated ? (
                     <Button
                       type="button"
-                      className="h-10 w-full rounded-full bg-[#18181B] text-sm font-semibold"
+                      className="h-10 w-full cursor-pointer rounded-full bg-[#18181B] text-sm font-semibold"
                       onClick={() => {
                         handleAddToCart(selectedDish, detailQty);
                         setSelectedDish(null);

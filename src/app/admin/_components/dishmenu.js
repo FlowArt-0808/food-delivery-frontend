@@ -33,6 +33,9 @@ const FoodForm = ({
   onFileChange,
   submitText,
   onSubmit,
+  secondaryActionText,
+  onSecondaryAction,
+  secondaryActionDisabled,
   isSubmitting,
   isAuthenticated,
 }) => (
@@ -105,7 +108,18 @@ const FoodForm = ({
       </div>
     )}
 
-    <DialogFooter className="!justify-end">
+    <DialogFooter className={secondaryActionText ? "!justify-between" : "!justify-end"}>
+      {secondaryActionText && onSecondaryAction ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-6 rounded-md border-[#EF4444] px-3 text-[10px] text-[#EF4444] hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+          onClick={onSecondaryAction}
+          disabled={secondaryActionDisabled || isSubmitting || !isAuthenticated}
+        >
+          {secondaryActionText}
+        </Button>
+      ) : null}
       <Button className="h-6 rounded-md bg-[#18181B] px-3 text-[10px]" type="submit" disabled={isSubmitting || !isAuthenticated}>
         {isSubmitting ? "Saving..." : submitText}
       </Button>
@@ -114,18 +128,18 @@ const FoodForm = ({
 );
 
 const EditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none">
-    <path d="M4 20H8L18 10L14 6L4 16V20Z" stroke="#18181B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M15.3 5.1L18.9 8.7M16.9 3.5C17.9 2.5 19.5 2.5 20.5 3.5C21.5 4.5 21.5 6.1 20.5 7.1L9.2 18.4L4 20L5.6 14.8L16.9 3.5Z"
+      stroke="#EF4444"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
-const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
-    <path d="M1 1L9 9M9 1L1 9" stroke="#18181B" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
-
-const DishCard = ({ food, onEdit, onDelete }) => (
+const DishCard = ({ food, onEdit }) => (
   <ProductCard
     title={food.foodName || "Unknown dish"}
     description={food.ingredients || ""}
@@ -134,22 +148,13 @@ const DishCard = ({ food, onEdit, onDelete }) => (
     imageAlt={food.foodName || "Dish"}
     unoptimized={Boolean(food.image)}
     actionSlot={
-      <>
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:bg-[#F4F4F5]"
-          onClick={onEdit}
-        >
-          <EditIcon />
-        </button>
-        <button
-          type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition hover:bg-[#F4F4F5]"
-          onClick={onDelete}
-        >
-          <CloseIcon />
-        </button>
-      </>
+      <button
+        type="button"
+        className="grid h-11 w-11 cursor-pointer place-items-center rounded-full border border-[#E4E4E7] bg-[#F4F4F5] p-0 shadow-sm transition hover:bg-white"
+        onClick={onEdit}
+      >
+        <EditIcon />
+      </button>
     }
   />
 );
@@ -317,9 +322,12 @@ export const Dishmenu = ({
   return (
     <div className="flex flex-col gap-3 rounded-xl bg-[#FFF] p-3">
       {showUndoBanner && (
-        <div className="flex items-center justify-between rounded-md border border-[#E4E4E7] bg-[#F4F4F5] px-3 py-2">
-          <p className="text-xs text-[#3F3F46]">Dish successfully deleted. Would you like to undo this action?</p>
-          <Button type="button" className="h-7 rounded-md bg-[#18181B] px-3 text-xs" onClick={handleUndoDelete}>
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E4E4E7] bg-white px-4 py-3">
+          <div className="space-y-0.5">
+            <p className="text-base font-semibold text-[#09090B]">Dish successfully deleted.</p>
+            <p className="text-sm text-[#18181B]">Would you like to undo this action?</p>
+          </div>
+          <Button type="button" className="h-8 rounded-md bg-[#18181B] px-3 text-xs" onClick={handleUndoDelete}>
             Undo
           </Button>
         </div>
@@ -345,16 +353,16 @@ export const Dishmenu = ({
             key={food._id}
             food={food}
             onEdit={() => openEditDialog(food)}
-            onDelete={() => {
-              setDeletingFood(food);
-              setIsDeleteConfirmOpen(true);
-            }}
           />
         ))}
       </div>
 
       <Dialog aria-label="Add dish" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="w-[340px] rounded-xl border-[#E4E4E7] p-3.5">
+        <DialogContent
+          className="w-[340px] rounded-xl border-[#E4E4E7] p-3.5"
+          onPointerDownOutside={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           <FoodForm
             title={`Add new Dish to ${category.categoryName}`}
             categories={allCategories}
@@ -377,7 +385,11 @@ export const Dishmenu = ({
       </Dialog>
 
       <Dialog aria-label="Edit dish info" open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="w-[340px] rounded-xl border-[#E4E4E7] p-3.5">
+        <DialogContent
+          className="w-[340px] rounded-xl border-[#E4E4E7] p-3.5"
+          onPointerDownOutside={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
           <FoodForm
             title="Dishes info"
             categories={allCategories}
@@ -393,6 +405,17 @@ export const Dishmenu = ({
             }}
             submitText="Save changes"
             onSubmit={handleEditSubmit}
+            secondaryActionText="Delete dish"
+            onSecondaryAction={() => {
+              if (!editingFood) {
+                return;
+              }
+
+              setDeletingFood(editingFood);
+              setIsEditDialogOpen(false);
+              setIsDeleteConfirmOpen(true);
+            }}
+            secondaryActionDisabled={!editingFood?._id}
             isSubmitting={isSubmitting}
             isAuthenticated={isAuthenticated}
           />

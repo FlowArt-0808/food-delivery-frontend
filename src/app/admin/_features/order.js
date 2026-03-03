@@ -20,6 +20,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAdminContext } from "@/app/_provider/adminProvider";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:999";
@@ -50,6 +57,7 @@ export const Order = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState("Pending");
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState("");
   const [singleOrderId, setSingleOrderId] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -150,10 +158,50 @@ export const Order = () => {
     }
   };
 
-  const openSingleStatusDialog = (orderId, status) => {
-    setSingleOrderId(orderId);
-    setSelectedStatus(toTitleCase(status));
-    setIsDeliveryButtonClicked(true);
+  const getStatusPillClass = (status) => {
+    const normalized = normalizeStatus(status);
+    if (normalized === "delivered") {
+      return "border-[#86EFAC] bg-white text-[#18181B]";
+    }
+    if (normalized === "cancelled") {
+      return "border-[#D4D4D8] bg-white text-[#18181B]";
+    }
+    return "border-[#F87171] bg-white text-[#18181B]";
+  };
+
+  const handleRowStatusChange = async (orderId, nextStatus) => {
+    if (!orderId) {
+      return;
+    }
+
+    try {
+      setUpdatingOrderId(orderId);
+      setError("");
+
+      await axios.patch(
+        `${API_BASE}/authentication/order/status`,
+        {
+          orderIds: [orderId],
+          status: normalizeStatus(nextStatus),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+        }
+      );
+
+      setOrders((prev) =>
+        prev.map((item) =>
+          item._id === orderId ? { ...item, status: normalizeStatus(nextStatus) } : item
+        )
+      );
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Failed to update order status");
+    } finally {
+      setUpdatingOrderId("");
+    }
   };
 
   const openBulkStatusDialog = () => {
@@ -264,19 +312,30 @@ export const Order = () => {
                   <td className="p-4 align-top">${Number(item.totalPrice || 0).toFixed(2)}</td>
                   <td className="p-4 align-top">{item.deliveryAddress || "-"}</td>
                   <td className="p-4 align-top">
-                    <button
-                      type="button"
-                      className={`rounded-full border px-3 py-1 text-xs ${
-                        normalizeStatus(item.status) === "delivered"
-                          ? "border-green-500 bg-green-50 text-green-600"
-                          : normalizeStatus(item.status) === "cancelled"
-                            ? "border-gray-400 bg-gray-100 text-gray-600"
-                            : "border-red-500 bg-[#E11D48]/10 text-red-500"
-                      }`}
-                      onClick={() => openSingleStatusDialog(item._id, item.status)}
+                    <Select
+                      value={normalizeStatus(item.status)}
+                      onValueChange={(value) => handleRowStatusChange(item._id, value)}
+                      disabled={updatingOrderId === item._id}
                     >
-                      {toTitleCase(item.status)}
-                    </button>
+                      <SelectTrigger
+                        className={`h-11 min-w-[146px] cursor-pointer rounded-full px-4 text-[15px] font-semibold shadow-none ${getStatusPillClass(
+                          item.status
+                        )}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent align="end" className="w-[146px] rounded-2xl border-[#E4E4E7] bg-white p-1">
+                        <SelectItem value="delivered" className="cursor-pointer rounded-xl text-[15px]">
+                          Delivered
+                        </SelectItem>
+                        <SelectItem value="pending" className="cursor-pointer rounded-xl text-[15px]">
+                          Pending
+                        </SelectItem>
+                        <SelectItem value="cancelled" className="cursor-pointer rounded-xl text-[15px]">
+                          Cancelled
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </td>
                 </tr>
               ))}
