@@ -6,6 +6,7 @@ import Step1 from "./_features/step1";
 import Step2 from "./_features/step2";
 import { useFormik } from "formik";
 import axios from "axios";
+import { API_BASE } from "@/lib/api-base";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -42,7 +43,7 @@ const Register = () => {
       try {
         // It's connecting to backend.
         const response = await axios.post(
-          "http://localhost:999/authentication/signup",
+          `${API_BASE}/authentication/signup`,
           {
             email: values.email,
             password: values.password,
@@ -57,7 +58,7 @@ const Register = () => {
         // If no error occured while connecting, it will mark it as "success" and do the codes below setSuccess(true)
         setSuccess(true);
         alert("Registration successful! Welcome aboard!");
-        window.location.href = "http://localhost:3000/login";
+        window.location.href = "/login";
       } catch (err) {
         // However, if something wrong happened when trying to connect with backend, setError(err.message) will capture the error message and display it through alert
         setError(err.message);

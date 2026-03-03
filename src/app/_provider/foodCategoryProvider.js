@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { API_BASE } from "@/lib/api-base";
 
 const FoodCategoryContext = createContext(null);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:999";
 
 export const useFoodCategoryContext = () => {
   const context = useContext(FoodCategoryContext);

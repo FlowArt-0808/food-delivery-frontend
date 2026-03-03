@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import UserFormImage from "../../_components/images/UserFormImage.png";
 import { Button } from "@/components/ui/button";
 
@@ -54,9 +55,9 @@ const Step1 = ({ formik, setStep }) => {
               className="flex items-center justify-center text-[16px] gap-3"
             >
               Already have an account?{" "}
-              <a href="http://localhost:3000/login" className="text-[#2563EB]">
+              <Link href="/login" className="text-[#2563EB]">
                 Log in
-              </a>
+              </Link>
             </div>
           </FieldGroup>
         </FieldSet>

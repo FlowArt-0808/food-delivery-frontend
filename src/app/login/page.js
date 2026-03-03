@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import UserFormImage from "../_components/images/UserFormImage.png";
 import { useState } from "react";
 import { useFormik } from "formik";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
+import { API_BASE } from "@/lib/api-base";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Email is required"),
@@ -36,7 +38,7 @@ const Login = () => {
       setError("");
 
       try {
-        const response = await axios.post("http://localhost:999/authentication/login", {
+        const response = await axios.post(`${API_BASE}/authentication/login`, {
           email: values.email,
           password: values.password,
         });
@@ -47,7 +49,7 @@ const Login = () => {
           localStorage.setItem("authToken", data.token);
         }
 
-        window.location.href = "http://localhost:3000/home";
+        window.location.href = "/home";
       } catch (err) {
         const message = err?.response?.data?.message || err.message;
         setError(message);
@@ -99,9 +101,9 @@ const Login = () => {
             {error && <div className="text-sm font-medium text-red-500">{error}</div>}
 
             <div className="flex items-center justify-end">
-              <a href="http://localhost:3000/forgot-password" className="text-[14px] text-[#2563EB] hover:underline">
+              <Link href="/forgot-password" className="text-[14px] text-[#2563EB] hover:underline">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <Button type="submit" onClick={handleSubmit} disabled={loading}>
@@ -109,7 +111,7 @@ const Login = () => {
             </Button>
 
             <div aria-label="Section to register" className="flex items-center justify-center gap-3 text-[16px]">
-              Dont have an account? <a href="http://localhost:3000/signup" className="text-[#2563EB]">Sign up</a>
+              Dont have an account? <Link href="/signup" className="text-[#2563EB]">Sign up</Link>
             </div>
           </FieldGroup>
         </FieldSet>

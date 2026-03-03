@@ -28,8 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAdminContext } from "@/app/_provider/adminProvider";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:999";
+import { API_BASE } from "@/lib/api-base";
 
 const getAuthToken = () => {
   if (typeof window === "undefined") {

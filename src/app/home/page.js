@@ -18,8 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import SaladImage from "../_components/images/Salad-3.png";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:999";
+import { API_BASE } from "@/lib/api-base";
 
 const getAuthToken = () => {
   if (typeof window === "undefined") {
