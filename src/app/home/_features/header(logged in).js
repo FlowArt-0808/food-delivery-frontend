@@ -90,6 +90,7 @@ const HeaderLoggedIn = ({
   const [panelError, setPanelError] = useState("");
   const [isPanelAlertOpen, setIsPanelAlertOpen] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const signedInEmail = useMemo(() => {
     if (typeof window === "undefined") {
@@ -122,6 +123,7 @@ const HeaderLoggedIn = ({
   useEffect(() => {
     if (!isCartOpen) {
       setPanelError("");
+      setLocationError("");
     }
   }, [isCartOpen]);
 
@@ -149,14 +151,14 @@ const HeaderLoggedIn = ({
     }
 
     if (!locationInput.trim()) {
-      setPanelError("Please write your delivery address!");
-      setIsPanelAlertOpen(true);
+      setLocationError("Please complete your address");
       return;
     }
 
     try {
       setIsPlacingOrder(true);
       setPanelError("");
+      setLocationError("");
       onSaveLocation(locationInput.trim());
       await onPlaceOrder(locationInput.trim());
       setActiveTab("order");
@@ -360,9 +362,7 @@ const HeaderLoggedIn = ({
                                     {item.foodName}
                                   </p>
                                   <p className="mt-1 line-clamp-2 text-[14px] leading-5 text-[#18181B]">
-                                    {item.ingredients ||
-                                      item.description ||
-                                      "Fluffy pancakes stacked with fruits, cream, syrup, and powdered sugar."}
+                                    {item.ingredients || item.description || ""}
                                   </p>
                                 </div>
 
@@ -409,11 +409,19 @@ const HeaderLoggedIn = ({
                     <div className="pt-1">
                       <p className="text-[26px] font-semibold leading-none text-[#71717A]">Delivery location</p>
                       <Input
-                        className="mt-3 h-[64px] rounded-2xl border-[#D4D4D8] px-4 text-[16px] text-[#71717A] placeholder:text-[#71717A]"
+                        className={`mt-3 h-[64px] rounded-2xl px-4 text-[16px] text-[#71717A] placeholder:text-[#71717A] ${
+                          locationError ? "border-[#EF4444] focus-visible:ring-[#EF4444]" : "border-[#D4D4D8]"
+                        }`}
                         placeholder="Please share your complete address"
                         value={locationInput}
-                        onChange={(e) => setLocationInput(e.target.value)}
+                        onChange={(e) => {
+                          setLocationInput(e.target.value);
+                          if (locationError && e.target.value.trim()) {
+                            setLocationError("");
+                          }
+                        }}
                       />
+                      {locationError && <p className="mt-2 text-sm text-[#EF4444]">{locationError}</p>}
                     </div>
                   </div>
                 ) : (
@@ -572,7 +580,8 @@ const HeaderLoggedIn = ({
       </Dialog>
 
       <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
-        <DialogContent className="h-[439px] w-[664px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[36px] border-none bg-[#F3F4F6] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.35)] !flex !flex-col !items-center !justify-between !gap-0">
+        {isSuccessOpen && <div className="fixed inset-0 z-[140] bg-black/40" aria-hidden="true" />}
+        <DialogContent className="z-[150] h-[439px] w-[664px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[36px] border-none bg-[#F3F4F6] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.35)] !flex !flex-col !items-center !justify-between !gap-0">
           <DialogHeader className="w-full !space-y-0 text-center">
             <DialogTitle className="mx-auto w-full text-center whitespace-nowrap text-[22px] font-semibold leading-[1.2] text-[#09090B]">
               Your order has been successfully placed !

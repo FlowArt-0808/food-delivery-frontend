@@ -40,13 +40,13 @@ export const ProductCard = ({
       role={isInteractive ? "button" : undefined}
       tabIndex={isInteractive ? 0 : undefined}
     >
-      <div className="relative h-[210px] w-full max-w-[365.333px] overflow-hidden rounded-2xl bg-[#F4F4F5]">
+      <div className="relative h-[210px] w-full max-w-[365.333px] overflow-hidden rounded-2xl bg-[#F4F4F5] bg-center bg-no-repeat bg-cover">
         <Image
           src={imageSrc || SaladImage}
           alt={imageAlt || title || "Product image"}
           width={366}
           height={210}
-          className="h-[210px] w-full object-cover"
+          className="h-[210px] w-full object-cover object-center"
           unoptimized={Boolean(imageSrc) || unoptimized}
         />
 

@@ -94,6 +94,28 @@ export const FoodCategoryProvider = ({ children }) => {
     await fetchMenu();
   };
 
+  const updateCategory = async ({ id, categoryName }) => {
+    ensureAuthToken();
+
+    if (!id || !categoryName?.trim()) {
+      throw new Error("Category id and category name are required");
+    }
+
+    try {
+      await axios.patch(
+        `${API_BASE}/authentication/foodCategory`,
+        { id, categoryName: categoryName.trim() },
+        { headers: { "Content-Type": "application/json", ...getAuthHeaders() } }
+      );
+    } catch (err) {
+      const apiMessage = err?.response?.data?.message || "Failed to update category";
+      const apiError = err?.response?.data?.error;
+      throw new Error(apiError ? `${apiMessage}: ${apiError}` : apiMessage);
+    }
+
+    await fetchMenu();
+  };
+
   const uploadDishImage = async (file) => {
     if (!file) {
       return "";
@@ -184,6 +206,7 @@ export const FoodCategoryProvider = ({ children }) => {
       fetchMenu,
       createCategory,
       deleteCategory,
+      updateCategory,
       uploadDishImage,
       createFood,
       updateFood,

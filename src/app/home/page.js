@@ -144,6 +144,8 @@ const Home = () => {
         {
           _id: dish._id,
           foodName: dish.foodName,
+          ingredients: dish.ingredients || "",
+          description: dish.description || "",
           price: Number(dish.price || 0),
           quantity: qty,
           image: dish.image || "",

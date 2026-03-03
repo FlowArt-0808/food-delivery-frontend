@@ -21,6 +21,7 @@ export const FoodMenu = () => {
     fetchMenu,
     createCategory,
     deleteCategory,
+    updateCategory,
     createFood,
     updateFood,
     deleteFood,
@@ -33,8 +34,13 @@ export const FoodMenu = () => {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState("all");
   const [showCategoryAddedToast, setShowCategoryAddedToast] = useState(false);
   const [categoryDeleteTarget, setCategoryDeleteTarget] = useState(null);
+  const [categoryActionTarget, setCategoryActionTarget] = useState(null);
+  const [categoryRenameTarget, setCategoryRenameTarget] = useState(null);
+  const [renameCategoryName, setRenameCategoryName] = useState("");
+  const [isRenamingCategory, setIsRenamingCategory] = useState(false);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const [showCategoryDeletedToast, setShowCategoryDeletedToast] = useState(false);
+  const [showCategoryRenamedToast, setShowCategoryRenamedToast] = useState(false);
 
   useEffect(() => {
     fetchMenu();
@@ -96,6 +102,43 @@ export const FoodMenu = () => {
     }
   };
 
+  const handleRenameCategory = async () => {
+    if (!categoryRenameTarget?._id) {
+      return;
+    }
+
+    try {
+      setIsRenamingCategory(true);
+      await updateCategory({
+        id: categoryRenameTarget._id,
+        categoryName: renameCategoryName,
+      });
+      setCategoryRenameTarget(null);
+      setRenameCategoryName("");
+      setShowCategoryRenamedToast(true);
+      setTimeout(() => setShowCategoryRenamedToast(false), 2600);
+    } catch (error) {
+      alert(error?.response?.data?.message || error.message || "Failed to rename category");
+    } finally {
+      setIsRenamingCategory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!categoryActionTarget) {
+      return;
+    }
+
+    const closeMenu = () => setCategoryActionTarget(null);
+    window.addEventListener("click", closeMenu);
+    window.addEventListener("scroll", closeMenu, true);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+      window.removeEventListener("scroll", closeMenu, true);
+    };
+  }, [categoryActionTarget]);
+
   return (
     <div aria-label="All dishes and their category" className="relative flex flex-col gap-4 bg-[#E4E4E5]">
       {showCategoryAddedToast && (
@@ -127,6 +170,22 @@ export const FoodMenu = () => {
               />
             </svg>
             <p>Category has been deleted from the menu</p>
+          </div>
+        </div>
+      )}
+      {showCategoryRenamedToast && (
+        <div className="pointer-events-none fixed left-1/2 top-5 z-[130] -translate-x-1/2">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#52525B] bg-[#18181B] px-5 py-3 text-sm text-[#FAFAFA] shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none">
+              <path
+                d="M14.4 1.2L6 10.8L1.6 6.4"
+                stroke="#FAFAFA"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p>Category name has been updated</p>
           </div>
         </div>
       )}
@@ -169,9 +228,13 @@ export const FoodMenu = () => {
                 if (!hasAuthToken) {
                   return;
                 }
-                setCategoryDeleteTarget(category);
+                setCategoryActionTarget({
+                  category,
+                  x: event.clientX,
+                  y: event.clientY,
+                });
               }}
-              title="Right click to delete this category"
+              title="Right click for category actions"
             >
               {category.categoryName}
               <div className="rounded-full bg-[#18181B] px-1.5 py-0.5 text-[8px] font-semibold text-[#FAFAFA]">
@@ -261,6 +324,80 @@ export const FoodMenu = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={Boolean(categoryRenameTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCategoryRenameTarget(null);
+            setRenameCategoryName("");
+          }
+        }}
+      >
+        <DialogContent className="w-[340px] rounded-xl border-[#E4E4E7] p-4">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold text-[#09090B]">Rename category</DialogTitle>
+          </DialogHeader>
+
+          <Input
+            type="text"
+            placeholder="Type new category name"
+            value={renameCategoryName}
+            onChange={(e) => setRenameCategoryName(e.target.value)}
+          />
+
+          <DialogFooter className="!justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setCategoryRenameTarget(null);
+                setRenameCategoryName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#18181B] text-white"
+              onClick={handleRenameCategory}
+              disabled={isRenamingCategory || !renameCategoryName.trim()}
+            >
+              {isRenamingCategory ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {categoryActionTarget && (
+        <div
+          className="fixed z-[140] min-w-[150px] rounded-lg border border-[#E4E4E7] bg-white p-1 shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
+          style={{ left: categoryActionTarget.x, top: categoryActionTarget.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="w-full rounded-md px-3 py-2 text-left text-sm text-[#18181B] hover:bg-[#F4F4F5]"
+            onClick={() => {
+              setCategoryRenameTarget(categoryActionTarget.category);
+              setRenameCategoryName(categoryActionTarget.category?.categoryName || "");
+              setCategoryActionTarget(null);
+            }}
+          >
+            Rename
+          </button>
+          <button
+            type="button"
+            className="w-full rounded-md px-3 py-2 text-left text-sm text-[#EF4444] hover:bg-[#FEF2F2]"
+            onClick={() => {
+              setCategoryDeleteTarget(categoryActionTarget.category);
+              setCategoryActionTarget(null);
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 };
