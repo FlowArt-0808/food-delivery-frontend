@@ -279,7 +279,7 @@ const HeaderLoggedIn = ({
       {isCartOpen && (
         <div className="fixed inset-0 z-[90] bg-black/35" onClick={() => setIsCartOpen(false)}>
           <aside
-            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[560px] flex-col gap-4 overflow-hidden bg-[#3F3F46] p-5 shadow-2xl"
+            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[560px] flex-col gap-4 overflow-y-auto bg-[#3F3F46] p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -330,7 +330,7 @@ const HeaderLoggedIn = ({
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col rounded-[28px] bg-[#F4F4F5] p-5">
+            <div className="flex min-h-[320px] flex-1 flex-col rounded-[28px] bg-[#F4F4F5] p-5">
               <h3
                 className={`text-[26px] font-semibold leading-none ${
                   activeTab === "cart" ? "text-[#71717A]" : "text-[#09090B]"
@@ -341,7 +341,7 @@ const HeaderLoggedIn = ({
 
               {activeTab === "cart" ? (
                 cartItems.length ? (
-                  <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3">
+                  <div className="mt-4 flex min-h-[220px] flex-1 flex-col gap-3">
                     <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
                       {cartItems.map((item) => (
                         <article key={item._id || item.id} className="border-b border-dashed border-[#A1A1AA] pb-3 last:border-b-0">
