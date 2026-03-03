@@ -1,9 +1,7 @@
-"use client";
-
-import Image from "next/image";
+import { redirect } from "next/navigation";
 
 const Start = () => {
-  return <div className="flex flex-col">Hello from Start</div>;
+  redirect("/home");
 };
 
 export default Start;
