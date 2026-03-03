@@ -473,7 +473,9 @@ const HeaderLoggedIn = ({
                             >
                               <div className="flex min-w-0 items-center gap-2">
                                 <BowlIcon className="h-7 w-7 shrink-0" />
-                                <span className="line-clamp-1">{orderItem.foodName}</span>
+                                <span className="line-clamp-1">
+                                  {orderItem.foodName || orderItem.food?.foodName || orderItem.food?.name || "Unknown food"}
+                                </span>
                               </div>
                               <span className="shrink-0">x {orderItem.quantity}</span>
                             </div>

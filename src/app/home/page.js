@@ -35,21 +35,30 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const normalizeOrder = (order) => ({
-  id: order?._id || order?.id,
-  orderNumber: Number(order?.orderNumber || 0),
-  createdAt: order?.createdAt,
-  status: order?.status || "pending",
-  deliveryAddress: order?.deliveryAddress || "",
-  totalPrice: Number(order?.totalPrice || 0),
-  items: Array.isArray(order?.foodOrderItems)
-    ? order.foodOrderItems.map((item) => ({
-        id: item?._id,
-        quantity: Number(item?.quantity || 0),
-        foodName: item?.food?.foodName || "Unknown food",
-      }))
-    : [],
+const normalizeOrderItem = (item) => ({
+  id: item?._id || item?.id || item?.foodId || item?.food?._id,
+  quantity: Number(item?.quantity || 0),
+  foodName:
+    item?.foodName || item?.food?.foodName || item?.food?.name || "Unknown food",
 });
+
+const normalizeOrder = (order) => {
+  const rawItems = Array.isArray(order?.items)
+    ? order.items
+    : Array.isArray(order?.foodOrderItems)
+      ? order.foodOrderItems
+      : [];
+
+  return {
+    id: order?._id || order?.id,
+    orderNumber: Number(order?.orderNumber || 0),
+    createdAt: order?.createdAt,
+    status: order?.status || "pending",
+    deliveryAddress: order?.deliveryAddress || "",
+    totalPrice: Number(order?.totalPrice || 0),
+    items: rawItems.map(normalizeOrderItem),
+  };
+};
 
 const Home = () => {
   const [location, setLocation] = useState("");
@@ -202,12 +211,14 @@ const Home = () => {
       },
     );
 
-    const createdOrder = response?.data?.order;
-    if (createdOrder) {
-      setOrders((prev) => [normalizeOrder(createdOrder), ...prev]);
-    } else {
+    try {
       const myOrders = await fetchMyOrders();
       setOrders(myOrders);
+    } catch {
+      const createdOrder = response?.data?.order;
+      if (createdOrder) {
+        setOrders((prev) => [normalizeOrder(createdOrder), ...prev]);
+      }
     }
 
     setCartItems([]);
